@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bright Vista — Admin</title>
+<style>
+  body{font-family:system-ui,Arial,sans-serif;background:#0d2137;color:#fff;display:flex;min-height:100vh;margin:0;align-items:center;justify-content:center}
+  .box{padding:28px 24px;max-width:420px;width:100%;text-align:center}
+  .logo{font-size:30px;font-weight:800;color:#ff7a1a;margin-bottom:6px}
+  p{line-height:1.55;color:#dbe6f2}
+  label{display:block;text-align:left;font-size:14px;margin:18px 0 6px;color:#ffb37a;font-weight:600}
+  input{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1px solid #33506e;background:#122c47;color:#fff;font-size:16px}
+  button{width:100%;margin-top:14px;padding:13px;border:0;border-radius:10px;background:#ff7a1a;color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+  .alt{margin-top:22px;font-size:14px}
+  a{color:#ffb37a}
+  .note{font-size:13px;color:#93a9bf;margin-top:16px}
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo">Bright Vista</div>
+    <p>Trang dành cho <b>Admin</b> (Nhung, chị Lương).<br>Dán mã admin của bạn vào ô dưới rồi bấm mở — mã chỉ dùng để tạo link trên máy của bạn, không gửi đi đâu khác.</p>
+    <label for="key">Mã admin (lấy ở tab CAI_DAT / HUONG_DAN trong Google Sheet)</label>
+    <input id="key" type="text" inputmode="text" autocomplete="off" placeholder="Dán mã admin vào đây">
+    <button onclick="openAdmin()">Mở Web App Admin</button>
+    <div class="alt">Bạn là chủ file Google?<br><a href="https://script.google.com/macros/s/AKfycbzb3HycWn8AOWTsSTg5V6JTZPkq9FPEUwZyb08E4ir0R08lr7T56-7ZYRuCO5gs7E6h/exec">Mở luôn không cần mã</a></div>
+    <p class="note">Không gửi link có mã admin cho giáo viên hoặc CTV.</p>
+  </div>
+<script>
+  var BASE = "https://script.google.com/macros/s/AKfycbzb3HycWn8AOWTsSTg5V6JTZPkq9FPEUwZyb08E4ir0R08lr7T56-7ZYRuCO5gs7E6h/exec";
+  function openAdmin(){
+    var k = document.getElementById('key').value.trim();
+    if(!k){ alert('Bạn chưa dán mã admin. Nếu bạn là chủ file, bấm link "Mở luôn không cần mã" ở dưới.'); return; }
+    window.location.href = BASE + "?key=" + encodeURIComponent(k);
+  }
+  document.getElementById('key').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ openAdmin(); } });
+</script>
+</body>
+</html>
