@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bright Vista — Hệ thống quản lý lịch dạy Anh ngữ online 1-1</title>
+<meta name="description" content="Bright Vista — Portal quản lý lịch dạy Anh ngữ online 1-1: lịch tuần, điểm danh, học thử, chấm công và slot giáo viên, chạy trên Google Sheet + Apps Script.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --orange:#FF6B1A; --orange2:#FF8A3D; --orange-soft:#FFF1E6;
+  --navy:#0A1E33; --navy2:#0E2A47; --teal:#0E7C7B; --teal-soft:#E6F4F3;
+  --ink:#16222E; --muted:#5B6B7A; --line:#E6ECF1; --bg:#F7F9FB; --card:#FFFFFF;
+  --yellow:#FFF3B0; --pink:#FFD6E0; --blue:#CFE8FF; --grey:#E9EDF1; --green:#D3F2DC; --lilac:#EAE3F7;
+  --radius:20px; --shadow:0 18px 45px rgba(10,30,51,.12); --shadow-sm:0 8px 24px rgba(10,30,51,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:"Be Vietnam Pro","Inter",system-ui,sans-serif;color:var(--ink);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+img{max-width:100%}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .9s ease,transform .9s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.reveal{transition:none;opacity:1;transform:none}.floaty{animation:none!important}}
+
+/* Header */
+header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px;height:68px}
+.logo{display:flex;align-items:center;gap:11px;font-weight:900;font-size:20px;color:var(--navy);letter-spacing:-.02em}
+.logo-mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--orange),var(--orange2));display:grid;place-items:center;color:#fff;font-size:19px;box-shadow:0 8px 18px rgba(255,107,26,.35)}
+.logo small{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+.nav-links{display:flex;gap:26px;font-size:14.5px;font-weight:600;color:var(--navy2)}
+.nav-links a:hover{color:var(--orange)}
+.nav-cta{background:var(--navy);color:#fff!important;padding:10px 18px;border-radius:999px}
+.nav-cta:hover{background:var(--orange)}
+@media(max-width:820px){.nav-links a:not(.nav-cta){display:none}}
+
+/* Hero */
+.hero{background:radial-gradient(900px 480px at 85% -10%,rgba(14,124,123,.55),transparent 60%),radial-gradient(700px 420px at -10% 110%,rgba(255,107,26,.35),transparent 55%),linear-gradient(135deg,var(--navy) 0%,var(--navy2) 58%,#0B3B4A 100%);color:#fff;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:48px;align-items:center;padding:74px 0 84px}
+@media(max-width:920px){.hero-grid{grid-template-columns:1fr;padding:52px 0 64px}}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600}
+.badge i{width:8px;height:8px;border-radius:50%;background:#3ED598;display:inline-block}
+.hero h1{font-size:clamp(40px,6vw,64px);line-height:1.06;font-weight:900;letter-spacing:-.03em;margin:20px 0 8px}
+.hero h1 .grad{background:linear-gradient(90deg,var(--orange2),#FFC24B);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .tagline{font-size:clamp(18px,2.4vw,23px);font-weight:600;color:#FFE3CF;line-height:1.45}
+.hero p.lead{margin-top:16px;color:#C9D8E6;font-size:16.5px;max-width:560px}
+.cta-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:30px}
+.btn{display:inline-flex;align-items:center;gap:9px;padding:14px 24px;border-radius:999px;font-weight:700;font-size:15.5px;transition:transform .35s ease,box-shadow .35s ease,background .35s ease}
+.btn:hover{transform:translateY(-2px)}
+.btn-orange{background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff;box-shadow:0 14px 30px rgba(255,107,26,.38)}
+.btn-ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.3)}
+.btn-ghost:hover{background:rgba(255,255,255,.16)}
+.btn-navy{background:var(--navy);color:#fff}
+.btn-light{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+.btn-light:hover{border-color:var(--orange);color:var(--orange)}
+.hero-stats{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px}
+.stat{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:12px 18px;min-width:118px}
+.stat b{display:block;font-size:22px;line-height:1.2}
+.stat span{font-size:12.5px;color:#B9CBDC}
+
+/* Phone mock */
+.floaty{animation:floaty 7s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.phone{background:#fff;color:var(--ink);border-radius:30px;box-shadow:0 34px 70px rgba(0,0,0,.35);padding:20px;max-width:430px;margin:0 auto;width:100%}
+.phone-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.phone-head b{color:var(--navy);font-size:16px}
+.chip{font-size:11.5px;font-weight:700;background:var(--orange-soft);color:var(--orange);padding:4px 10px;border-radius:999px}
+.sample-note{font-size:12px;color:var(--muted);background:#FFF8F1;border:1px dashed #FFC9A3;border-radius:10px;padding:7px 11px;margin:10px 0 14px}
+.lesson{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:10px;font-size:13.5px}
+.lesson .time{font-weight:800;color:var(--navy);white-space:nowrap}
+.lesson .meta{color:var(--muted);font-size:12.5px}
+.dot{width:11px;height:11px;border-radius:50%;flex:none}
+.progress{height:8px;border-radius:99px;background:#EDF1F5;overflow:hidden;margin-top:6px}
+.progress i{display:block;height:100%;width:72%;background:linear-gradient(90deg,var(--teal),#35B5B3);border-radius:99px}
+
+/* Sections */
+section{padding:76px 0}
+.eyebrow{font-size:13px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--orange);text-align:center}
+h2.title{font-size:clamp(28px,4vw,40px);font-weight:900;letter-spacing:-.02em;color:var(--navy);text-align:center;margin:10px auto 12px;max-width:760px;line-height:1.2}
+.sub{text-align:center;color:var(--muted);max-width:680px;margin:0 auto 44px;font-size:16px}
+
+/* Portals */
+.portal-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
+@media(max-width:920px){.portal-grid{grid-template-columns:1fr}}
+.portal ul{padding-left:18px;color:var(--muted);font-size:14.5px}
+.portal ul li{margin-bottom:4px}
+
+/* Terminology */
+.term-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:980px;margin:0 auto}
+@media(max-width:820px){.term-grid{grid-template-columns:1fr}}
+.term{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--orange);border-radius:18px;padding:26px;box-shadow:var(--shadow-sm)}
+.term h3{color:var(--navy);font-size:19px;margin-bottom:8px}
+.term p{color:var(--muted);font-size:15px}
+.term .warn{background:#FFF3F3;border:1px solid #FFD2D2;color:#8A2323;border-radius:12px;padding:10px 13px;font-size:13.5px;margin-top:12px}
+.term .ok{background:var(--teal-soft);border:1px solid #BFE3E1;color:#0B4F4E;border-radius:12px;padding:10px 13px;font-size:13.5px;margin-top:12px}
+
+/* Monthly detail mock */
+.detail-card{max-width:1080px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+.detail-head{background:linear-gradient(90deg,var(--orange),var(--orange2));color:#fff;font-weight:800;padding:15px 20px;font-size:16.5px}
+.detail-months{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+@media(max-width:920px){.detail-months{grid-template-columns:1fr}}
+.month{border-right:1px solid var(--line)}
+.month:last-child{border-right:none}
+.month h4{background:#FFF3B0;color:var(--navy);text-align:center;padding:9px;font-size:14.5px;border-bottom:1px solid var(--line)}
+.month table{font-size:13.5px}
+.month th{background:#FFF8DC;color:var(--navy);padding:7px 12px;font-size:13px}
+.month td{padding:7px 12px;border-top:1px solid #EEF2F5}
+.month .red{color:#D92D20;font-weight:600}
+.month .total{background:#CFE8FF;font-weight:900;text-align:center;color:var(--navy);font-size:15px}
+.detail-foot{background:linear-gradient(90deg,var(--orange),var(--orange2));color:#fff;font-weight:800;padding:14px 20px;font-size:15.5px}
+.portal{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:30px 28px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:12px;transition:transform .4s ease,box-shadow .4s ease}
+.portal:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
+.portal .icon{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-size:26px}
+.portal h3{font-size:21px;color:var(--navy)}
+.portal p{color:var(--muted);font-size:14.5px;flex:1}
+.portal .btn{justify-content:center}
+.portal .note{font-size:12.5px;background:#FFF8F1;border:1px solid #FFE1C7;color:#8A4B14;border-radius:12px;padding:10px 13px;line-height:1.55}
+.portal .dual{display:grid;gap:10px}
+
+/* Features */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:920px){.feat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.feat-grid{grid-template-columns:1fr}}
+.feat{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;transition:transform .35s ease,border-color .35s ease}
+.feat:hover{transform:translateY(-4px);border-color:#FFC9A3}
+.feat .num{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--navy);color:#fff;font-weight:800;font-size:14px;margin-bottom:12px}
+.feat h3{font-size:16.5px;color:var(--navy);margin-bottom:6px}
+.feat p{font-size:14px;color:var(--muted)}
+
+/* Colour table */
+.color-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;max-width:860px;margin:0 auto}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{background:var(--navy);color:#fff;text-align:left;padding:15px 20px;font-size:14px;letter-spacing:.02em}
+td{padding:14px 20px;border-top:1px solid var(--line);vertical-align:top}
+td b{color:var(--navy)}
+.swatch{display:inline-block;width:52px;height:26px;border-radius:8px;border:1px solid rgba(10,30,51,.14);vertical-align:middle}
+.strike{text-decoration:line-through}
+
+/* Steps */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+@media(max-width:920px){.steps{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.steps{grid-template-columns:1fr}}
+.step{background:var(--navy);color:#DCE8F2;border-radius:var(--radius);padding:26px 22px;position:relative;overflow:hidden}
+.step::after{content:"";position:absolute;right:-26px;top:-26px;width:90px;height:90px;border-radius:50%;background:rgba(255,107,26,.22)}
+.step .n{font-size:34px;font-weight:900;color:var(--orange2);line-height:1}
+.step h3{color:#fff;font-size:17px;margin:12px 0 7px}
+.step p{font-size:14px}
+.step .goal{margin-top:12px;font-size:13px;background:rgba(62,213,152,.14);border:1px solid rgba(62,213,152,.35);color:#A9EBCB;border-radius:10px;padding:8px 11px}
+
+/* English block */
+.en-card{background:linear-gradient(135deg,#083B3A,var(--teal));color:#EAF7F5;border-radius:26px;padding:38px;box-shadow:var(--shadow)}
+.en-card h2{color:#fff;font-size:clamp(24px,3.4vw,32px);margin-bottom:8px;letter-spacing:-.01em}
+.en-card p{max-width:700px;color:#CDEAE7}
+.en-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}
+@media(max-width:820px){.en-grid{grid-template-columns:1fr}}
+.en-item{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:18px}
+.en-item b{color:#fff;display:block;margin-bottom:5px}
+.en-item span{font-size:14px;color:#CDEAE7}
+.en-card .btn{margin-top:26px}
+
+/* FAQ */
+.faq{max-width:820px;margin:0 auto;display:grid;gap:12px}
+.faq details{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 22px;transition:border-color .3s ease}
+.faq details[open]{border-color:#FFC9A3}
+.faq summary{cursor:pointer;font-weight:700;color:var(--navy);padding:15px 0;list-style:none;display:flex;justify-content:space-between;gap:14px;align-items:center}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-size:22px;color:var(--orange);font-weight:800}
+.faq details[open] summary::after{content:"–"}
+.faq .a{padding:0 0 18px;color:var(--muted);font-size:15px}
+.faq code{background:#F1F5F8;border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:13.5px;color:var(--navy)}
+
+/* Footer */
+footer{background:var(--navy);color:#B9CBDC;padding:56px 0 34px}
+.foot-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:34px;margin-bottom:36px}
+@media(max-width:820px){.foot-grid{grid-template-columns:1fr}}
+footer h4{color:#fff;margin-bottom:12px;font-size:16px}
+footer a:hover{color:var(--orange2)}
+footer li{list-style:none;margin-bottom:8px;font-size:14.5px}
+.free-box{background:rgba(255,107,26,.13);border:1px solid rgba(255,138,61,.4);border-radius:16px;padding:18px 20px;color:#FFE3CF;font-size:14.5px}
+.copyright{border-top:1px solid rgba(255,255,255,.12);padding-top:22px;font-size:13px;color:#87A0B5;display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="#top"><span class="logo-mark">✦</span><span>Bright Vista<small>English Online 1-1</small></span></a>
+    <nav class="nav-links">
+      <a href="#cong-vao">Cổng vào</a>
+      <a href="#tinh-nang">Tính năng</a>
+      <a href="#bang-mau">Bảng màu</a>
+      <a href="#quy-trinh">Quy trình</a>
+      <a href="#faq">FAQ</a>
+      <a class="nav-cta" href="#cong-vao">Vào hệ thống →</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="badge"><i></i> Hệ thống vận hành nội bộ · Bright Vista</span>
+      <h1>Bright <span class="grad">Vista</span></h1>
+      <p class="tagline">Quản lý lịch dạy Anh ngữ online 1-1 — rõ ràng, không trùng giờ, không sót buổi.</p>
+      <p class="lead">Một cổng vào duy nhất cho Admin, Giáo viên, Cộng tác viên (CTV) và Sổ tay hướng dẫn: xếp lịch, nhận tin Zalo, điểm danh, học thử, chấm công và tính slot — tất cả nối thẳng tới dữ liệu gốc của trung tâm.</p>
+      <div class="cta-row">
+        <a class="btn btn-orange" href="#cong-vao">🚀 Vào cổng của bạn</a>
+        <a class="btn btn-ghost" href="#tinh-nang">Xem 11 tính năng ↓</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><b>11 tab</b><span>đầy đủ nghiệp vụ</span></div>
+        <div class="stat"><b>1-1</b><span>GV Philippines + VN</span></div>
+        <div class="stat"><b>0 dòng đỏ</b><span>mục tiêu Kiểm tra tuần</span></div>
+        <div class="stat"><b>0đ</b><span>phí duy trì hệ thống</span></div>
+      </div>
+    </div>
+    <div class="floaty" aria-hidden="true">
+      <div class="phone">
+        <div class="phone-head"><b>📅 Lịch tuần — mẫu minh họa</b><span class="chip">TUẦN NÀY</span></div>
+        <div class="sample-note">⚠️ <b>Dữ liệu mẫu bịa hoàn toàn</b> để minh họa giao diện — không phải học viên / giáo viên thật.</div>
+        <div class="lesson"><span class="dot" style="background:#F2C230"></span><span class="time">17:30</span><div><b>HV mẫu A</b> · ESL · GV mẫu 1<div class="meta">Test 1 · Buổi 11/12 · 28 phút</div></div></div>
+        <div class="lesson"><span class="dot" style="background:#5B9BD5"></span><span class="time">18:00</span><div><b>HV mẫu B</b> · Trial · GV mẫu 2<div class="meta">Học thử · 28 phút · Chờ kết quả</div></div></div>
+        <div class="lesson"><span class="dot" style="background:#63B87C"></span><span class="time">19:00</span><div><b>HV mẫu C</b> · PRE-IELTS · GV mẫu 1<div class="meta">Học bù · Buổi 7/20 · 50 phút</div><div class="progress" style="flex-basis:100%"><i></i></div></div></div>
+        <div class="lesson"><span class="dot" style="background:#E77A9B"></span><span class="time">20:00</span><div><b>HV mẫu D</b> · IELTS · GV mẫu 3<div class="meta">Test 2 – Final · Buổi 24/24 · Báo Sale tái khóa</div></div></div>
+        <p style="font-size:12.5px;color:var(--muted)">Màu ô buổi học theo đúng bảng màu chuẩn ở mục <a href="#bang-mau" style="color:var(--orange);font-weight:700">Bảng màu</a> bên dưới.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PORTALS -->
+<section id="cong-vao">
+  <div class="wrap">
+    <p class="eyebrow reveal">Cổng vào hệ thống</p>
+    <h2 class="title reveal">Bạn là ai? Vào đúng cổng của mình</h2>
+    <p class="sub reveal">Bốn cổng tách bạch theo quyền: Admin nhập liệu &amp; quản lý, Giáo viên chỉ xem lịch của mình, Cộng tác viên (CTV) chỉ xem để hỗ trợ xếp lịch và gửi lịch cho phụ huynh, Sổ tay hướng dẫn từng bước. Đừng dùng nhầm link của nhau — xem thêm mục FAQ nếu vào sai giao diện.</p>
+    <div class="portal-grid">
+      <article class="portal reveal">
+        <span class="icon" style="background:var(--orange-soft)">🛠️</span>
+        <h3>Admin</h3>
+        <p>Dành cho Admin (chị Nhung, chị Lương) và chủ trung tâm: đủ 11 tab — nhập lịch, nhật ký Zalo, học thử, kiểm tra tuần, chấm công và slot lương.</p>
+        <a class="btn btn-orange" href="https://script.google.com/macros/s/AKfycbzb3HycWn8AOWTsSTg5V6JTZPkq9FPEUwZyb08E4ir0R08lr7T56-7ZYRuCO5gs7E6h/exec" target="_blank" rel="noopener">Mở Web App Admin →</a>
+        <div class="note">🔒 <b>Lưu ý bảo mật:</b> link trên trang này <b>không kèm mã admin</b>. Anh/chị Admin hãy dán thêm mã admin của mình vào cuối link đã lưu riêng trước khi dùng. Chủ file (tài khoản Google chủ hệ thống) mở link này là vào thẳng, không cần mã. Tuyệt đối không chia sẻ link đã dán mã cho người ngoài.</div>
+      </article>
+      <article class="portal reveal">
+        <span class="icon" style="background:var(--teal-soft)">👩‍🏫</span>
+        <h3>Giáo viên</h3>
+        <p>Dành cho giáo viên Philippines và Việt Nam: chỉ xem <b>Weekly schedule</b>, <b>Daily grid</b> và <b>My slots</b> của chính mình. Không cần mã, không sửa được dữ liệu.</p>
+        <a class="btn btn-navy" href="https://script.google.com/macros/s/AKfycbzb3HycWn8AOWTsSTg5V6JTZPkq9FPEUwZyb08E4ir0R08lr7T56-7ZYRuCO5gs7E6h/exec?mode=gv" target="_blank" rel="noopener">Teacher View · Xem lịch →</a>
+        <div class="note" style="background:var(--teal-soft);border-color:#BFE3E1;color:#0B4F4E">📌 Teachers: this is your view-only link. Please wait 5–10 seconds for the schedule to load — see the English section below.</div>
+      </article>
+      <article class="portal reveal">
+        <span class="icon" style="background:#EAF1FF">🤝</span>
+        <h3>Cộng tác viên — CTV</h3>
+        <p>Dành cho cộng tác viên hỗ trợ xếp lịch và chăm sóc phụ huynh: <b>chỉ xem, không sửa được dữ liệu, không xem lương / đơn giá</b>. Gồm đúng 3 view:</p>
+        <ul>
+          <li><b>Lịch hàng ngày:</b> có lọc <b>Từ ngày → Đến ngày</b> + ô tìm tên GV, để xem giờ trống mà xếp lịch.</li>
+          <li><b>Lịch học viên tổng hợp:</b> chính là Chấm công ở chế độ chỉ xem.</li>
+          <li><b>Lịch chi tiết cá nhân HV:</b> lịch học chi tiết theo tháng của từng học viên, dùng để gửi phụ huynh (xem mẫu ở mục bên dưới).</li>
+        </ul>
+        <a class="btn btn-navy" href="https://script.google.com/macros/s/AKfycbzb3HycWn8AOWTsSTg5V6JTZPkq9FPEUwZyb08E4ir0R08lr7T56-7ZYRuCO5gs7E6h/exec?mode=ctv" target="_blank" rel="noopener">Mở cổng CTV · Chỉ xem →</a>
+        <div class="note" style="background:#EFF5FF;border-color:#C9DDFB;color:#274B73">👀 CTV không thấy đơn giá, lương Peso / VND và không có nút sửa / lưu nào — nếu thấy giao diện có nút sửa, bạn đang vào nhầm cổng, báo Admin ngay.</div>
+      </article>
+      <article class="portal reveal">
+        <span class="icon" style="background:#FFF4D6">📖</span>
+        <h3>Sổ tay hướng dẫn</h3>
+        <p>Quên cách làm? Mở sổ tay trước khi hỏi: Admin có bản tiếng Việt chi tiết từng tab, giáo viên có bản tiếng Anh ngắn gọn, đúng việc.</p>
+        <div class="dual">
+          <a class="btn btn-light" href="https://hanglex9x-cmyk.github.io/brightvista-schedule/admin.html" target="_blank" rel="noopener">📘 Sổ tay Admin (tiếng Việt)</a>
+          <a class="btn btn-light" href="https://hanglex9x-cmyk.github.io/brightvista-schedule/" target="_blank" rel="noopener">📗 Teacher Guide (English)</a>
+        </div>
+        <p style="font-size:12.5px;color:var(--muted)">Sổ tay là trang tĩnh công khai — không chứa mã admin và không chứa dữ liệu học viên.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="tinh-nang" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <p class="eyebrow reveal">Đủ 11 tab trong Web App</p>
+    <h2 class="title reveal">Một hệ thống, trọn vòng đời một buổi học</h2>
+    <p class="sub reveal">Từ xếp lịch, nhận tin nghỉ / học bù trên Zalo, tới chấm công cuối tháng và tính slot lương giáo viên — 11 tab nối nhau, không phải ghi tay rời rạc nữa.</p>
+    <div class="feat-grid">
+      <article class="feat reveal"><span class="num">1</span><h3>Lịch tuần GV</h3><p>Tab mặc định. Tuần bắt đầu Thứ 2, lọc theo giáo viên, tìm nhanh học viên, cột Buổi <b>n/N</b> cho biết tiến độ từng khóa.</p></article>
+      <article class="feat reveal"><span class="num">2</span><h3>Lưới theo ngày</h3><p>Cột là giáo viên, dòng là mốc 30 phút, bỏ qua Chủ nhật. Ô xám = ngoài giờ rảnh, trắng = đang rảnh, đỏ = trùng giờ.</p></article>
+      <article class="feat reveal"><span class="num">3</span><h3>Giờ trống GV</h3><p>Xem giờ bắt đầu còn nhận được slot 30′; buổi 50–56′ cần 2 mốc liền nhau trống. Xem <b>trước</b> khi xếp học viên mới.</p></article>
+      <article class="feat reveal"><span class="num">4</span><h3>Kiểm tra tuần</h3><p>Chốt chặn cuối ngày: GV trùng giờ và HV trùng giờ phải về <b>0</b>, kèm cảnh báo ngoài giờ rảnh, Test / kết thúc, học thử, buổi nghỉ, khóa chưa rõ.</p></article>
+      <article class="feat reveal"><span class="num">5</span><h3>Tạo khóa / Tái khóa</h3><p>Mã khóa tự cấp dạng <b>HVxxxx-n</b>, học thử mã <b>TR####</b>. Lớp ESL / PRE-IELTS / IELTS; 25–30′ = slot 30′, 50–56′ = slot 60′.</p></article>
+      <article class="feat reveal"><span class="num">6</span><h3>Chi tiết khóa</h3><p>Lịch cố định, số buổi Còn lại, Kết thúc dự kiến. Đổi lịch cố định từ một ngày = nhập lại toàn bộ lịch mới, lịch cũ vẫn giữ cho các buổi trước đó.</p></article>
+      <article class="feat reveal"><span class="num">7</span><h3>Nhật ký Zalo</h3><p>Mỗi tin Zalo = 1 lần lưu: KP, MP, chưa rõ phí, GV nghỉ, bảo lưu, học bù, đổi giờ / GV, kết thúc sớm. Loại sự kiện quyết định có trừ buổi và tính slot hay không.</p></article>
+      <article class="feat reveal"><span class="num">8</span><h3>Học thử</h3><p>Điền HV, năm sinh, Sale, ngày / giờ, GV, thời lượng (mặc định 28′). Kết quả: Chờ → Đăng ký / Không đăng ký / Hủy; đăng ký thì bấm Tạo khóa, hệ thống điền sẵn.</p></article>
+      <article class="feat reveal"><span class="num">9</span><h3>Giáo viên</h3><p>Thêm GV và giờ rảnh ngay trong Web App (nhóm PH / VN, màu riêng, đơn giá theo lớp). Sửa / xóa GV và giờ rảnh thực hiện trên Google Sheet gốc.</p></article>
+      <article class="feat reveal"><span class="num">10</span><h3>Chấm công HV</h3><p>Tự tính cuối tháng từ lịch + nhật ký với ký hiệu x, T1, T2, KP / MP, GV, BL, HB, TR, KT. Còn cuối ≤ 2 buổi hiện đỏ = sắp hết, báo Sale sớm.</p></article>
+      <article class="feat reveal"><span class="num">11</span><h3>Slot &amp; lương GV + Bảo lưu</h3><p>Tổng slot = slot 30′ + Trial + 2 × slot 60′, chia Kỳ 1 (1–15) và Kỳ 2 (16–cuối tháng). Kèm theo dõi bảo lưu, đỏ khi sắp hết / quá 60 ngày.</p></article>
+      <article class="feat reveal" style="background:var(--orange-soft);border-color:#FFD9BE"><span class="num" style="background:var(--orange)">✦</span><h3>Nguyên tắc vàng</h3><p>Luôn bấm <b>Kiểm tra trùng giờ</b> trước khi lưu, và cuối ngày mở <b>Kiểm tra tuần</b> tới khi 2 khung đỏ đều bằng 0.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- COLOUR TABLE -->
+<section id="bang-mau">
+  <div class="wrap">
+    <p class="eyebrow reveal">Bảng màu buổi học</p>
+    <h2 class="title reveal">Nhìn màu là biết trạng thái buổi học</h2>
+    <p class="sub reveal">Màu chuẩn dùng thống nhất trong Lịch tuần, Lưới theo ngày và Chấm công. Đây là màu dữ liệu trong app — không phải màu thương hiệu của trang này.</p>
+    <div class="color-card reveal">
+      <table>
+        <thead><tr><th style="width:110px">Màu</th><th style="width:220px">Trạng thái</th><th>Ý nghĩa &amp; việc cần làm</th></tr></thead>
+        <tbody>
+          <tr><td><span class="swatch" style="background:var(--yellow)"></span></td><td><b>Vàng nhạt — Test 1</b></td><td>Buổi kiểm tra 1, sau buổi này còn 1 buổi. Báo Sale chuẩn bị tái khóa.</td></tr>
+          <tr><td><span class="swatch" style="background:var(--pink)"></span></td><td><b>Hồng — Test 2 · Final</b></td><td>Buổi cuối của khóa. Báo Sale tái khóa ngay; ngày bắt đầu khóa mới là ngay sau buổi này.</td></tr>
+          <tr><td><span class="swatch" style="background:var(--blue)"></span></td><td><b>Xanh dương nhạt — Trial</b></td><td>Buổi học thử. Chờ kết quả: Đăng ký / Không đăng ký / Hủy.</td></tr>
+          <tr><td><span class="swatch" style="background:var(--grey)"></span></td><td><b>Xám, <span class="strike">gạch ngang</span> — Nghỉ</b></td><td>Buổi nghỉ: KP, MP, giáo viên nghỉ, chưa rõ phí hoặc đang bảo lưu.</td></tr>
+          <tr><td><span class="swatch" style="background:var(--green)"></span></td><td><b>Xanh lá nhạt — Học bù</b></td><td>Buổi học bù cho buổi đã nghỉ, theo ngày / giờ và giáo viên mới đã chốt.</td></tr>
+          <tr><td><span class="swatch" style="background:var(--lilac)"></span></td><td><b>Tím nhạt — Kết thúc sớm</b></td><td>Khóa kết thúc / hủy trước dự kiến, tính đến buổi cuối cùng.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINOLOGY -->
+<section id="thuat-ngu" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <p class="eyebrow reveal">Thuật ngữ — đọc để khỏi hiểu lầm</p>
+    <h2 class="title reveal">Hai khái niệm hay bị hiểu sai nhất</h2>
+    <p class="sub reveal">Admin, CTV và giáo viên cần hiểu thống nhất hai thuật ngữ này trước khi đọc cảnh báo trong Kiểm tra tuần và Giờ trống GV.</p>
+    <div class="term-grid">
+      <article class="term reveal">
+        <h3>⚠️ “Ngoài giờ rảnh của GV” nghĩa là gì?</h3>
+        <p>Là buổi học được xếp vào giờ nằm <b>ngoài khung giờ giáo viên đã đăng ký rảnh ở tab GIO_RANH</b> trên Google Sheet. Hệ thống đối chiếu giờ buổi học với khung rảnh đó để cảnh báo.</p>
+        <div class="warn">❌ <b>Không phải</b> là “ngoài lịch cố định”. Buổi học vẫn có thể đúng lịch cố định của học viên mà vẫn bị báo ngoài giờ rảnh, nếu giờ đó không nằm trong khung GV đăng ký rảnh.</div>
+        <div class="ok">✅ Cách xử lý: kiểm tra lại tab Giờ trống GV / GIO_RANH của GV đó — hoặc đổi buổi sang giờ GV có đăng ký rảnh, hoặc nhờ GV xác nhận bổ sung khung rảnh rồi Admin cập nhật.</div>
+      </article>
+      <article class="term reveal">
+        <h3>🌏 “Nhóm PH / VN” nghĩa là gì?</h3>
+        <p><b>PH = giáo viên Philippines</b> (Philippines teachers).<br><b>VN = giáo viên Việt Nam</b> (Vietnamese teachers).</p>
+        <p style="margin-top:10px">Nhóm này dùng để phân nhóm giáo viên trong tab Giáo viên, gán màu riêng, lọc lịch, và áp dụng đơn giá khác nhau theo nhóm và theo lớp (ESL / PRE-IELTS / IELTS / Trial) khi tính slot &amp; lương.</p>
+        <div class="ok">📌 Khi thêm giáo viên mới, chọn đúng nhóm PH hoặc VN ngay từ đầu — chọn sai nhóm sẽ sai màu, sai lọc lịch và có thể sai đơn giá.</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- MONTHLY DETAIL MOCK -->
+<section id="lich-chi-tiet">
+  <div class="wrap">
+    <p class="eyebrow reveal">Mới · Lịch chi tiết cá nhân học viên</p>
+    <h2 class="title reveal">Lịch học chi tiết tháng của từng HV — để gửi phụ huynh</h2>
+    <p class="sub reveal">Một trang cho một học viên: mỗi tháng một khối Ngày | Tình trạng đặt cạnh nhau, tổng buổi từng tháng và dòng cộng dồn ở cuối. Đây cũng là view thứ 3 trong cổng CTV và là bản xuất riêng từ menu Google Sheet.</p>
+    <div class="sample-note reveal" style="max-width:1080px;margin:0 auto 16px">⚠️ <b>Dữ liệu mẫu bịa hoàn toàn</b> bên dưới để minh họa đúng định dạng — tên học viên, ngày tháng và số buổi đều là ví dụ, không phải dữ liệu thật của trung tâm.</div>
+    <div class="detail-card reveal">
+      <div class="detail-head">Học viên: HV MẪU A bắt đầu tái khóa từ 02/02/2026, khóa 40 buổi 25′</div>
+      <div class="detail-months">
+        <div class="month">
+          <h4>Tháng 02/2026</h4>
+          <table>
+            <tr><th>Ngày</th><th>Tình trạng</th></tr>
+            <tr><td>03/02/26</td><td>đã học</td></tr>
+            <tr><td>05/02/26</td><td>đã học</td></tr>
+            <tr><td>10/02/26</td><td class="red">GV nghỉ HV ko mất phí</td></tr>
+            <tr><td>12/02/26</td><td>đã học</td></tr>
+            <tr><td>19/02/26</td><td>đã học</td></tr>
+            <tr><td>24/02/26</td><td>HV nghỉ mất phí</td></tr>
+            <tr><td colspan="2" class="total">4</td></tr>
+          </table>
+        </div>
+        <div class="month">
+          <h4>Tháng 03/2026</h4>
+          <table>
+            <tr><th>Ngày</th><th>Tình trạng</th></tr>
+            <tr><td>03/03/26</td><td>đã học</td></tr>
+            <tr><td>05/03/26</td><td>đã học</td></tr>
+            <tr><td>10/03/26</td><td>HV xin nghỉ muộn mất phí</td></tr>
+            <tr><td>12/03/26</td><td>đã học</td></tr>
+            <tr><td>17/03/26</td><td>đã học</td></tr>
+            <tr><td>19/03/26</td><td>đã học</td></tr>
+            <tr><td>24/03/26</td><td>HV nghỉ ko mất phí</td></tr>
+            <tr><td>26/03/26</td><td>đã học</td></tr>
+            <tr><td colspan="2" class="total">6</td></tr>
+          </table>
+        </div>
+        <div class="month">
+          <h4>Tháng 04/2026</h4>
+          <table>
+            <tr><th>Ngày</th><th>Tình trạng</th></tr>
+            <tr><td>02/04/26</td><td>đã học</td></tr>
+            <tr><td>07/04/26</td><td>đã học</td></tr>
+            <tr><td>09/04/26</td><td class="red">GV nghỉ HV ko mất phí</td></tr>
+            <tr><td>14/04/26</td><td>đã học</td></tr>
+            <tr><td>16/04/26</td><td>đã học</td></tr>
+            <tr><td>21/04/26</td><td>đã học</td></tr>
+            <tr><td>23/04/26</td><td>đã học</td></tr>
+            <tr><td>28/04/26</td><td class="red">Nghỉ lễ 30/04 và 01/05</td></tr>
+            <tr><td colspan="2" class="total">6</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="detail-foot">Tính đến hết ngày 30/04/2026 là: 4+6+6 = 16 buổi học ( học viên học 16 buổi )</div>
+    </div>
+    <p class="reveal" style="text-align:center;color:var(--muted);font-size:14px;margin-top:16px">Đọc mẫu: mỗi khối tháng kết thúc bằng dòng tổng nền xanh dương; dòng cuối nền cam cộng dồn tất cả các tháng. Tình trạng lấy tự động từ lịch + nhật ký, ghi đầy đủ bằng chữ để phụ huynh đọc là hiểu.</p>
+  </div>
+</section>
+
+<!-- DAILY PROCESS -->
+<section id="quy-trinh" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <p class="eyebrow reveal">Quy trình 1 ngày của Admin</p>
+    <h2 class="title reveal">Từ tin Zalo tới lịch sạch — 4 bước mỗi ngày</h2>
+    <p class="sub reveal">Cứ theo đúng vòng này, lịch tuần sẽ không sót buổi, không trùng giờ và chấm công cuối tháng khớp ngay.</p>
+    <div class="steps">
+      <article class="step reveal"><div class="n">01</div><h3>Nhận tin Zalo</h3><p>Phụ huynh / học viên / giáo viên nhắn: nghỉ, nghỉ mất phí hay không, học bù, đổi giờ, giáo viên nghỉ, bảo lưu… Ghi rõ ngày, giờ, học viên và giáo viên.</p></article>
+      <article class="step reveal"><div class="n">02</div><h3>Nhập vào Web App</h3><p>Mỗi tin Zalo = 1 lần lưu ở tab Nhật ký, chọn đúng loại sự kiện (KP / MP / chưa rõ phí / GV / BL / HB / đổi giờ / KT). Xếp lịch mới thì xem Giờ trống GV trước và bấm Kiểm tra trùng giờ trước khi lưu.</p></article>
+      <article class="step reveal"><div class="n">03</div><h3>Mở Kiểm tra tuần</h3><p>Kiểm tra tới khi sạch cảnh báo, đặc biệt là trùng giờ và ngoài giờ rảnh (xem lại mục Thuật ngữ nếu chưa rõ “ngoài giờ rảnh”).</p><div class="goal">🎯 Mục tiêu cuối ngày: 2 khung đỏ = 0 (GV trùng giờ · HV trùng giờ)</div></article>
+      <article class="step reveal"><div class="n">04</div><h3>Nhắc giáo viên</h3><p>Chốt lịch xong thì nhắc GV kiểm tra lịch tuần / lịch ngày của mình ở cổng Giáo viên, xác nhận các buổi Test, học bù và đổi giờ trong ngày hôm sau.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- ENGLISH FOR TEACHERS -->
+<section id="teachers-en">
+  <div class="wrap">
+    <div class="en-card reveal">
+      <p style="font-size:13px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#FFC24B">For Filipino Teachers · English</p>
+      <h2>Your schedule, in one place</h2>
+      <p>Welcome to Bright Vista. Use the <b style="color:#fff">Teacher View</b> link — no password and no editing. You can only see your own schedule.</p>
+      <div class="en-grid">
+        <div class="en-item"><b>📅 Weekly schedule</b><span>See all your lessons for the week, Monday to Saturday, with each student and lesson number.</span></div>
+        <div class="en-item"><b>🗓️ Daily grid &amp; My slots</b><span>Check today&apos;s lessons in the daily grid, and your total slots for the period in My slots.</span></div>
+        <div class="en-item"><b>⏳ Please wait 5–10 seconds</b><span>The page reads all data before it opens, so a short loading time is normal. Please do not refresh repeatedly.</span></div>
+      </div>
+      <a class="btn btn-orange" href="https://script.google.com/macros/s/AKfycbzb3HycWn8AOWTsSTg5V6JTZPkq9FPEUwZyb08E4ir0R08lr7T56-7ZYRuCO5gs7E6h/exec?mode=gv" target="_blank" rel="noopener">Open Teacher View →</a>
+      <a class="btn btn-ghost" href="https://hanglex9x-cmyk.github.io/brightvista-schedule/" target="_blank" rel="noopener" style="margin-left:10px">Read the Teacher Guide</a>
+      <p style="margin-top:18px;font-size:13.5px">If your schedule looks wrong, please message the Admin team — do not ask students to change lessons directly.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="background:#fff;border-top:1px solid var(--line)">
+  <div class="wrap">
+    <p class="eyebrow reveal">FAQ — Lỗi thường gặp</p>
+    <h2 class="title reveal">Kẹt ở đâu, gỡ ở đó</h2>
+    <p class="sub reveal">Hầu hết sự cố đều do vào nhầm link hoặc chưa tải lại trang. Kiểm tra 6 câu này trước khi báo lỗi.</p>
+    <div class="faq reveal">
+      <details>
+        <summary>Tôi vào link mà không thấy đủ 11 tab — có phải sai link không?</summary>
+        <div class="a">Đúng, gần như chắc chắn là sai link hoặc thiếu quyền. Link Giáo viên và link CTV chỉ cho xem nên sẽ ít tab hơn hẳn — đó là đúng thiết kế, không phải lỗi. Admin cần dùng link Web App Admin <b>đã dán thêm mã admin của mình</b> (link trên trang public này cố ý không kèm mã). Nếu vẫn thiếu tab, kiểm tra lại bạn đang đăng nhập đúng tài khoản Google chưa, rồi mở lại link Admin đã lưu riêng.</div>
+      </details>
+      <details>
+        <summary>Teacher View là gì? Sao tôi chỉ xem được mà không sửa được?</summary>
+        <div class="a">Teacher View là cổng dành riêng cho giáo viên: chỉ xem Weekly schedule, Daily grid và My slots của chính mình. Không sửa, không lưu, không thấy dữ liệu của học viên / giáo viên khác ngoài lịch dạy chung. Cần sửa lịch thì báo Admin — Admin là người duy nhất nhập liệu vào Web App.</div>
+      </details>
+      <details>
+        <summary>Hệ thống báo TRÙNG giờ thì xử lý thế nào?</summary>
+        <div class="a">Trùng giờ nghĩa là cùng một giáo viên (hoặc cùng một học viên) có 2 buổi chồng giờ nhau. Mở tab <b>Giờ trống GV</b> để tìm mốc trống thật (buổi 50–56′ cần 2 mốc 30′ liền nhau trống), dời một trong hai buổi sang giờ trống, lưu lại rồi mở <b>Kiểm tra tuần</b>. Mục tiêu cuối ngày: cả hai khung đỏ GV trùng giờ và HV trùng giờ đều bằng <b>0</b>.</div>
+      </details>
+      <details>
+        <summary>Trang tải lâu 5–10 giây có phải bị lỗi không?</summary>
+        <div class="a">Không. Web App phải đọc toàn bộ Google Sheet rồi tính lại lịch, chấm công và slot trước khi hiển thị, nên chờ 5–10 giây là bình thường. Đừng bấm tải lại liên tục — cứ chờ trang mở hết. Nếu quá 30 giây vẫn trắng, kiểm tra mạng, đăng nhập lại Google rồi mở lại đúng link.</div>
+      </details>
+      <details>
+        <summary>Làm xong thao tác có phải F5 không?</summary>
+        <div class="a"><b>Đúng.</b> Sau khi đã lưu thao tác (nhập nhật ký, tạo khóa, đổi lịch…), hãy <b>F5 hoặc mở lại link</b> — Web App sẽ đọc lại toàn bộ Google Sheet và tính lại hết: lịch tuần, kiểm tra trùng, chấm công và slot đều cập nhật theo dữ liệu mới nhất. Nếu vừa làm xong mà số chưa đổi, F5 trước rồi mới kết luận là lỗi.</div>
+      </details>
+      <details>
+        <summary>Đổi tên link script.google.com cho ngắn gọn, dễ nhớ được không?</summary>
+        <div class="a"><b>Không.</b> Google không cho đặt tên tùy ý cho đường link Apps Script — đoạn mã dài trong link là cố định. Cách thay thế là dùng <b>link ngắn chuyển hướng trên GitHub Pages</b> của trung tâm: <code>/admin</code> cho Admin, <code>/teacher</code> cho Giáo viên, <code>/ctv</code> cho CTV. Từ nay tài liệu và tin nhắn chỉ cần ghi link ngắn này; link đích phía sau vẫn giữ nguyên. Lưu ý: trang chuyển hướng công khai không kèm mã admin — Admin vẫn tự dùng bản link đã dán mã đã lưu riêng.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a class="logo" href="#top" style="color:#fff"><span class="logo-mark">✦</span><span>Bright Vista<small style="color:#87A0B5">English Online 1-1</small></span></a>
+        <p style="margin-top:16px;font-size:14.5px;max-width:420px">Hệ thống quản lý lịch dạy Anh ngữ online 1-1 của Bright Vista: Admin nhập liệu, Giáo viên xem lịch, CTV hỗ trợ xếp lịch và gửi lịch chi tiết cho phụ huynh.</p>
+        <div class="free-box" style="margin-top:18px">💚 Hệ thống chạy trên <b>Google Sheet + Apps Script</b> — <b>miễn phí, không phí duy trì</b>. Toàn bộ dữ liệu nằm trong tài khoản Google của trung tâm, trung tâm làm chủ dữ liệu của mình.</div>
+      </div>
+      <div>
+        <h4>Cổng vào</h4>
+        <ul>
+          <li><a href="https://script.google.com/macros/s/AKfycbzb3HycWn8AOWTsSTg5V6JTZPkq9FPEUwZyb08E4ir0R08lr7T56-7ZYRuCO5gs7E6h/exec" target="_blank" rel="noopener">Admin — Web App (chưa kèm mã)</a></li>
+          <li><a href="https://script.google.com/macros/s/AKfycbzb3HycWn8AOWTsSTg5V6JTZPkq9FPEUwZyb08E4ir0R08lr7T56-7ZYRuCO5gs7E6h/exec?mode=gv" target="_blank" rel="noopener">Giáo viên — Teacher View</a></li>
+          <li><a href="https://script.google.com/macros/s/AKfycbzb3HycWn8AOWTsSTg5V6JTZPkq9FPEUwZyb08E4ir0R08lr7T56-7ZYRuCO5gs7E6h/exec?mode=ctv" target="_blank" rel="noopener">CTV — Chỉ xem</a></li>
+          <li>Link ngắn (sắp dùng): /admin · /teacher · /ctv</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Sổ tay &amp; hỗ trợ</h4>
+        <ul>
+          <li><a href="https://hanglex9x-cmyk.github.io/brightvista-schedule/admin.html" target="_blank" rel="noopener">Sổ tay Admin (tiếng Việt)</a></li>
+          <li><a href="https://hanglex9x-cmyk.github.io/brightvista-schedule/" target="_blank" rel="noopener">Teacher Guide (English)</a></li>
+          <li><a href="#thuat-ngu">Thuật ngữ: ngoài giờ rảnh · PH / VN</a></li>
+          <li><a href="#faq">FAQ lỗi thường gặp</a></li>
+          <li style="color:#87A0B5">Dữ liệu gốc Google Sheet: chỉ Admin truy cập.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="copyright"><span>© 2026 Bright Vista — Trung tâm Anh ngữ online 1-1.</span><span>Trang portal tĩnh · Không chứa mã admin · Không chứa dữ liệu học viên thật.</span></div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var els=document.querySelectorAll('.reveal');
+  if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return;}
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}});
+  },{threshold:.12});
+  els.forEach(function(e){io.observe(e);});
+})();
+</script>
+</body>
+</html>
