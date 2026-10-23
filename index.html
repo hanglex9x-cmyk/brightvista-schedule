@@ -28,14 +28,16 @@ details>summary::-webkit-details-marker{display:none}
 </style>
 </head>
 <body class="font-sans min-h-screen grid place-items-center bg-[#1E3A8A] text-white">
-<main class="text-center px-6">
-  <div class="mx-auto grid place-items-center w-20 h-20 rounded-3xl bg-white/15 text-5xl animate-pulse">🎓</div>
-  <h1 class="mt-5 text-3xl font-extrabold tracking-tight">BrightVista</h1>
-  <p class="text-blue-200">English Center</p>
-  <div class="mt-6 mx-auto w-40 h-1.5 rounded-full bg-white/20 overflow-hidden"><div id="bar" class="h-full w-0 bg-white rounded-full" style="transition:width .9s ease"></div></div>
-  <p class="mt-4 text-sm text-blue-200">Loading dashboard… <a href="portal.html" class="underline text-white">Open now</a></p>
-  <p class="mt-8 text-xs text-blue-300">Teacher guide (current system): <a href="guide/teacher.html" class="underline">guide/teacher.html</a></p>
+<main class="text-center px-6 py-10 w-full max-w-md">
+  <div class="mx-auto grid place-items-center w-20 h-20 rounded-3xl bg-white/15 text-5xl">🎓</div>
+  <h1 class="mt-5 text-3xl font-extrabold tracking-tight">Bright Vista</h1>
+  <p class="text-blue-200">Hệ thống lịch học · Schedule system</p>
+  <a href="app/" class="mt-8 block rounded-2xl bg-white text-[#1E3A8A] py-4 font-bold text-lg shadow-lg">Đăng nhập hệ thống<span class="block text-sm font-medium text-slate-500">Admin · Giáo viên (Teacher login) · CTV – dữ liệu thật</span></a>
+  <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+    <a href="admin.html" class="rounded-xl border border-white/30 py-3 font-semibold">Sổ tay Admin</a>
+    <a href="guide/teacher.html" class="rounded-xl border border-white/30 py-3 font-semibold">Teacher guide</a>
+  </div>
+  <a href="portal.html" class="mt-6 inline-block text-sm text-blue-200 underline">Bản demo portal (dữ liệu mẫu)</a>
 </main>
-<script>requestAnimationFrame(function(){document.getElementById('bar').style.width='100%'});setTimeout(function(){location.replace('portal.html')},1000);</script>
 </body>
 </html>

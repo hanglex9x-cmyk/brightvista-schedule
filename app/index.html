@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bright Vista – Hệ thống lịch học</title>
+<link rel="manifest" href="../manifest.webmanifest"><meta name="theme-color" content="#1f4e79"><link rel="icon" href="../icons/icon-192.png">
+<style>
+  :root { --main:#1f4e79; --bg:#f4f6f9; --line:#d8dee6; --red:#c62828; --green:#2e7d32; --orange:#ef6c00; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.4 Arial, sans-serif; background:var(--bg); color:#000; }
+  header { background:var(--main); color:#fff; padding:10px 16px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  header b { font-size:17px; }
+  nav { display:flex; flex-wrap:wrap; gap:4px; padding:8px 16px; background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; }
+  nav button { border:1px solid var(--line); background:#fff; padding:6px 10px; border-radius:6px; cursor:pointer; }
+  nav button.on { background:var(--main); color:#fff; border-color:var(--main); }
+  main { padding:12px 16px 40px; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px; }
+  input, select, textarea { padding:5px 7px; border:1px solid #b8c2cf; border-radius:5px; font:inherit; }
+  textarea { width:100%; min-height:70px; }
+  .btn { background:var(--main); color:#fff; border:0; padding:7px 14px; border-radius:6px; cursor:pointer; }
+  .btn.g { background:#fff; color:var(--main); border:1px solid var(--main); }
+  .btn:disabled { opacity:.5; }
+  table { border-collapse:collapse; background:#fff; width:100%; }
+  th, td { border:1px solid var(--line); padding:4px 6px; vertical-align:top; }
+  th { background:#e8eef5; font-weight:600; text-align:left; }
+  .scroll { overflow:auto; max-height:75vh; }
+  .scroll th { position:sticky; top:0; z-index:1; }
+  .small { font-size:12px; color:#333; }
+  .tag { display:inline-block; padding:1px 6px; border-radius:9px; font-size:12px; background:#eee; }
+  .t-Test1 { background:#fff3cd; } .t-Test2 { background:#ffd6d6; } .t-Trial { background:#dff0ff; } .t-Nghi { background:#eeeeee; color:#555; text-decoration:line-through; }
+  .t-KT { background:#f3d9ff; } .t-HB { background:#e2f7e2; }
+  .cf { background:#ffcdd2 !important; font-weight:bold; }
+  .off { background:#ececec; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:12px; }
+  .grid2 { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:8px 14px; }
+  .grid2 label { display:flex; flex-direction:column; font-size:12px; color:#222; gap:2px; }
+  .msg { padding:8px 12px; border-radius:6px; margin:8px 0; }
+  .msg.ok { background:#e6f4ea; color:var(--green); } .msg.err { background:#fde7e7; color:var(--red); } .msg.warn { background:#fff4e0; color:#8a4b00; }
+  .loading { color:#888; padding:20px; }
+  .gvcol { min-width:120px; font-size:13px; font-weight:600; color:#000; }
+  td { color:#000; }
+  .hide { display:none; }
+  .lichrow { display:flex; gap:6px; margin:4px 0; flex-wrap:wrap; }
+  a.lnk { color:var(--main); cursor:pointer; text-decoration:underline; }
+  .day { margin-bottom:14px; }
+  .day h3 { margin:10px 0 4px; font-size:15px; color:var(--main); }
+  .sw { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:4px; border:1px solid #999; }
+  @media (max-width:640px) { main { padding:8px; } th { top:0; } }
+
+  .hb { background:transparent; color:#fff; border:1px solid rgba(255,255,255,.45); border-radius:6px; padding:5px 10px; cursor:pointer; font:inherit; }
+  #bell { position:relative; } #bellN { position:absolute; top:-6px; right:-6px; background:#e53935; color:#fff; border-radius:9px; font-size:11px; padding:0 5px; font-style:normal; }
+  .login { max-width:380px; margin:40px auto; display:flex; flex-direction:column; gap:10px; }
+  .login h2 { margin:0; color:var(--main); } .login label { display:flex; flex-direction:column; gap:3px; font-size:13px; } .login input { padding:9px; font-size:15px; }
+  .ntf { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; border-left:4px solid; border-radius:6px; margin:8px 0; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:10px; margin-bottom:12px; }
+  .kpi { background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; } .kpi b { font-size:24px; color:var(--main); }
+  .cols2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:0 12px; }
+  .wk { width:100%; max-width:760px; height:auto; display:block; }
+  .lg { display:flex; gap:12px; flex-wrap:wrap; margin:6px 0; }
+  .hb2 { display:flex; flex-direction:column; gap:5px; margin-top:8px; } .hbr { display:grid; grid-template-columns:150px 1fr 48px; gap:8px; align-items:center; font-size:13px; }
+  .hbl { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .hbt { display:flex; height:16px; background:#f0f3f7; border-radius:3px; overflow:hidden; } .hbt i { display:block; height:100%; }
+  .board { display:grid; grid-template-columns:repeat(6,minmax(170px,1fr)); gap:8px; overflow-x:auto; }
+  .col { background:#fff; border:1px solid var(--line); border-radius:8px; padding:6px; min-height:120px; } .col h4 { margin:2px 2px 6px; color:var(--main); font-size:14px; }
+  .col.past { background:#f1f1f1; } .col.over { outline:3px dashed var(--main); background:#eef5ff; }
+  .pc { background:#fff; border:1px solid var(--line); border-left:5px solid; border-radius:6px; padding:4px 6px; margin-bottom:5px; font-size:13px; cursor:grab; }
+  .pc.st { opacity:.55; cursor:default; } .pc:not([draggable]) { cursor:default; } .pc.dragging { opacity:.4; }
+  .dlgbg { position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; z-index:50; padding:16px; }
+  .dlg { width:min(560px,100%); max-height:90vh; overflow:auto; } .rd { display:block; margin:4px 0; }
+  @media (max-width:640px) { .hbr { grid-template-columns:100px 1fr 40px; } .hb { padding:4px 7px; font-size:12px; } }
+</style>
+</head>
+<body>
+<header><b id="brand">BRIGHT VISTA</b><span id="hdr" class="small" style="color:#cfe0f1"></span><span style="flex:1"></span><button id="bell" class="hb" title="Thông báo" style="display:none">🔔<i id="bellN" style="display:none"></i></button><span id="usr" class="small" style="color:#cfe0f1;display:none"></span><button id="pwBtn" class="hb" style="display:none">Đổi mật khẩu</button><button id="outBtn" class="hb" style="display:none">Đăng xuất</button></header>
+<nav id="nav"></nav>
+<main id="main"><div class="loading">Đang tải…</div></main>
+
+<script>
+var MODE = '', KEY = '';
+var S = {}, CUR = null;
+var TABS_ADMIN = [['week','Lịch tuần GV'],['grid','Lưới theo ngày'],['free','Giờ trống GV'],['check','Kiểm tra tuần'],
+  ['hv','Học viên / Tạo khóa'],['zalo','Nhật ký Zalo'],['trial','Học thử'],['cc','Chấm công'],['detail','Lịch chi tiết HV'],['slot','Slot & lương'],['bl','Bảo lưu'],['gvs','Giáo viên'],['plan','Kéo-thả lịch'],['notify','Thông báo'],['reports','Báo cáo'],['accounts','Tài khoản']];
+var TABS_GV = [['week','Schedule'],['myslot','My slots'],['notify','Reminders']];
+var TABS_CTV = [['range','Lịch hàng ngày'],['grid','Lưới theo ngày'],['cc','Lịch học viên tổng hợp'],['detail','Lịch chi tiết HV'],['notify','Thông báo']];
+var DAYS = {1:'CN',2:'T2',3:'T3',4:'T4',5:'T5',6:'T6',7:'T7'};
+var DAYS_EN = {1:'Sun',2:'Mon',3:'Tue',4:'Wed',5:'Thu',6:'Fri',7:'Sat'};
+
+// Phần tử giả (có .value) cho trường hợp ô không còn trên màn hình.
+var GHOST=document.createElement('input');
+function $(id){ return document.getElementById(id) || GHOST; }
+function esc(s){ return String(s===undefined||s===null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+// GEN tăng mỗi lần đổi tab: kết quả của tab cũ về muộn bị bỏ qua, không ghi đè / báo lỗi lên tab mới.
+var GEN=0;
+function addDays(s,n){ var p=s.split('-'), d=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]+n)); return d.toISOString().slice(0,10); }
+function monday(s){ var p=s.split('-'), t=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay(); return addDays(s, t===0?-6:1-t); }
+function vn(s){ if(!s) return ''; var p=s.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function thuOf(s){ var p=s.split('-'); return new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay()+1; }
+function color(gv){ var t=S.teachers.filter(function(x){return x.name===gv;})[0]; var c=t?String(t.color||'').trim().toUpperCase():'';
+  if(t&&c&&c!=='#FFF'&&c!=='#FFFFFF'&&c!=='WHITE') return t.color;
+  var PALF=['#F8CBAD','#A9D08E','#9DC3E6','#FFE699','#C6E0B4','#F4B6C2','#B4C6E7','#FFD7A8','#A8D5BA','#BFE3DD']; var s=String(gv||''), h=0;
+  for(var i=0;i<s.length;i++) h+=s.charCodeAt(i)*(i+1);
+  return PALF[h%PALF.length]; }
+function gvOptions(sel, all){ return (all?'<option value="">'+(MODE==='gv'?'— all teachers —':'— tất cả GV —')+'</option>':'<option value=""></option>')+S.teachers.map(function(t){return '<option'+(t.name===sel?' selected':'')+'>'+esc(t.name)+'</option>';}).join(''); }
+function cls(x){ return x.type==='Test 1'?'t-Test1':x.type==='Test 2 -Final'?'t-Test2':x.type==='Trial'?'t-Trial':x.type==='Nghỉ'?'t-Nghi':x.type==='Kết thúc sớm'?'t-KT':x.type==='Học bù'?'t-HB':''; }
+function msg(el, text, kind){ $(el).innerHTML='<div class="msg '+(kind||'ok')+'">'+esc(text)+'</div>'; }
+function fail(e){ $('main').innerHTML='<div class="msg err">Lỗi: '+esc(e && e.message || e)+'</div>'; }
+function loading(){ $('main').innerHTML='<div class="loading">Đang tính…</div>'; }
+
+function nav(){
+  var tabs = MODE==='admin'?TABS_ADMIN:MODE==='ctv'?TABS_CTV:TABS_GV;
+  $('nav').innerHTML = tabs.map(function(t){return '<button data-t="'+t[0]+'" class="'+(t[0]===CUR?'on':'')+'">'+t[1]+'</button>';}).join('');
+  [].forEach.call($('nav').children, function(b){ b.onclick=function(){ go(b.dataset.t); }; });
+}
+function go(t){ GEN++; CUR=t; nav(); try{ localStorage.setItem('bv_tab',t); }catch(e){} VIEWS[t](); }
+
+var VIEWS = {};
+
+// Ô có màu nền GV: nền tối → chữ trắng đậm, nền sáng → chữ đen đậm.
+function textOn(bg){ var m=/^#?([0-9a-f]{6})$/i.exec(String(bg).trim()); if(!m){ var r=/rgb\((\d+),\s*(\d+),\s*(\d+)/.exec(bg); if(!r) return ''; m=[0,[r[1],r[2],r[3]].map(function(x){return ('0'+(+x).toString(16)).slice(-2);}).join('')]; }
+  var n=parseInt(m[1],16), R=n>>16&255, G=n>>8&255, B=n&255; return (0.299*R+0.587*G+0.114*B)<150?'#fff':'#000'; }
+function fixContrast(root){ [].forEach.call((root||document).querySelectorAll('[style*="background"]'),function(el){
+  if(el.dataset.cx) return; var bg=el.style.backgroundColor; if(!bg) return; var c=textOn(bg); if(c){ el.style.color=c; el.style.fontWeight='700'; } el.dataset.cx=1; }); }
+new MutationObserver(function(){ fixContrast(document.getElementById('main')); }).observe(document.getElementById('main'),{childList:true,subtree:true});
+
+/* ---------- LỊCH TUẦN GV ---------- */
+VIEWS.week = function(){
+  var en = MODE==='gv';
+  $('main').innerHTML='<div class="bar">'+(en?'Week from Monday':'Tuần bắt đầu thứ 2')+' <input type="date" id="wMon" value="'+S.wMon+'">'+
+    '<button class="btn g" id="wPrev">◀</button><button class="btn g" id="wNext">▶</button> '+(en?'Teacher':'GV')+' <select id="wGv">'+gvOptions(S.wGv,true)+'</select>'+
+    ' <input id="wQ" placeholder="'+(en?'search student':'tìm học viên')+'" size="14"></div><div id="wOut" class="loading">…</div>';
+  var load=function(){
+    S.wMon=monday($('wMon').value||S.monday); $('wMon').value=S.wMon; S.wGv=$('wGv').value; $('wOut').innerHTML='<div class="loading">…</div>';
+    call('api_week',S.wMon,S.wGv).then(function(L){ S.wData=L; draw(); }).catch(fail);
+  };
+  var draw=function(){
+    var q=$('wQ').value.toLowerCase(), L=S.wData.filter(function(x){return !q||x.name.toLowerCase().indexOf(q)>=0;}), h='', byDay={};
+    L.forEach(function(x){ (byDay[x.date]=byDay[x.date]||[]).push(x); });
+    Object.keys(byDay).sort().forEach(function(d){
+      h+='<div class="day"><h3>'+(en?DAYS_EN[thuOf(d)]:DAYS[thuOf(d)])+' '+vn(d)+' <span class="small">('+byDay[d].length+(en?' lessons':' buổi')+')</span></h3><table><tr><th>'+
+        (en?'Time</th><th>Teacher</th><th>Student</th><th>Age</th><th>Level</th><th>Class</th><th>Min</th><th>Lesson</th><th>Type':'Giờ</th><th>GV</th><th>Học viên</th><th>Tuổi</th><th>Level</th><th>Lớp</th><th>Phút</th><th>Buổi</th><th>Loại buổi')+'</th></tr>';
+      byDay[d].forEach(function(x){
+        h+='<tr class="'+cls(x)+'"><td>'+esc(x.time)+'</td><td style="background:'+color(x.gv)+'">'+esc(x.gv)+'</td><td>'+esc(x.name)+(MODE==='admin'&&x.id?' <span class="small">'+esc(x.id)+'</span>':'')+'</td><td>'+esc(x.age)+'</td><td>'+esc(x.level)+'</td><td>'+esc(x.lop)+'</td><td>'+x.dur+'</td><td>'+(x.no?x.no+'/'+x.total:'')+'</td><td>'+esc(x.type)+(x.status?' ('+esc(x.status)+')':'')+'</td></tr>';
+      });
+      h+='</table></div>';
+    });
+    $('wOut').innerHTML=(L.length?'<div class="small">'+L.length+(en?' lessons':' buổi')+'</div>':'<div class="msg warn">'+(en?'No lessons':'Không có buổi nào')+'</div>')+h;
+  };
+  $('wMon').onchange=load; $('wGv').onchange=load; $('wQ').oninput=function(){ if(S.wData) draw(); };
+  $('wPrev').onclick=function(){ $('wMon').value=addDays(S.wMon,-7); load(); };
+  $('wNext').onclick=function(){ $('wMon').value=addDays(S.wMon,7); load(); };
+  load();
+};
+
+/* ---------- LƯỚI THEO NGÀY ---------- */
+VIEWS.grid = function(){
+  $('main').innerHTML='<div class="bar">'+(MODE==='gv'?'Day':'Ngày')+' <input type="date" id="gDay" value="'+S.gDay+'"><button class="btn g" id="gPrev">◀</button><button class="btn g" id="gNext">▶</button>'+
+    ' <span class="small"><span class="sw" style="background:#ffcdd2"></span>trùng giờ <span class="sw" style="background:#f1f1f1"></span>ngoài giờ rảnh</span></div><div id="gOut" class="loading">…</div>';
+  var load=function(){
+    S.gDay=$('gDay').value||S.today; $('gOut').innerHTML='<div class="loading">…</div>';
+    call('api_grid',S.gDay).then(function(g){
+      var h='<div class="scroll"><table><tr><th>Giờ</th>'+g.teachers.map(function(t,i){return '<th class="gvcol" style="background:'+g.colors[i]+'">'+esc(t)+'</th>';}).join('')+'</tr>';
+      g.slots.forEach(function(s,i){
+        if(!g.cells[i].some(function(c){return c.busy;}) && (+s.slice(0,2)<17 && +s.slice(0,2)>9)) {}
+        h+='<tr><td><b>'+s+'</b></td>'+g.cells[i].map(function(c){return '<td class="gvcol '+(c.conflict?'cf':c.off&&!c.busy?'off':'')+'">'+esc(c.text)+'</td>';}).join('')+'</tr>';
+      });
+      $('gOut').innerHTML=h+'</table></div>';
+    }).catch(fail);
+  };
+  $('gDay').onchange=load;
+  $('gPrev').onclick=function(){ var d=addDays($('gDay').value,-1); if(thuOf(d)===1) d=addDays(d,-1); $('gDay').value=d; load(); };
+  $('gNext').onclick=function(){ var d=addDays($('gDay').value,1); if(thuOf(d)===1) d=addDays(d,1); $('gDay').value=d; load(); };
+  load();
+};
+
+/* ---------- GIỜ TRỐNG ---------- */
+VIEWS.free = function(){
+  $('main').innerHTML='<div class="bar">Tuần bắt đầu <input type="date" id="fMon" value="'+S.wMon+'"> <span class="small">Giờ bắt đầu còn nhận được buổi 30\' (trong giờ rảnh, không trùng buổi đang có)</span></div><div id="fOut" class="loading">…</div>';
+  var load=function(){
+    S.wMon=monday($('fMon').value); $('fMon').value=S.wMon;
+    call('api_free',S.wMon).then(function(r){
+      var h='<div class="scroll"><table><tr><th>GV</th>'+r.days.map(function(d){return '<th>'+DAYS[thuOf(d)]+' '+vn(d).slice(0,5)+'</th>';}).join('')+'</tr>';
+      r.rows.forEach(function(x){ h+='<tr><td style="background:'+color(x.gv)+'"><b>'+esc(x.gv)+'</b></td>'+x.free.map(function(f){return '<td class="small">'+esc(f)+'</td>';}).join('')+'</tr>'; });
+      $('fOut').innerHTML=h+'</table></div>';
+    }).catch(fail);
+  };
+  $('fMon').onchange=load; load();
+};
+
+/* ---------- KIỂM TRA TUẦN ---------- */
+VIEWS.check = function(){
+  $('main').innerHTML='<div class="bar">Tuần bắt đầu <input type="date" id="cMon" value="'+S.wMon+'"></div><div id="cOut" class="loading">…</div>';
+  var tbl=function(title,arr,kind){
+    var h='<div class="card"><b>'+title+'</b> <span class="tag">'+arr.length+'</span>';
+    if(!arr.length) return h+' <span class="small" style="color:var(--green)">✔ không có</span></div>';
+    h+='<table><tr><th>Ngày</th><th>Giờ</th><th>GV</th><th>Học viên</th><th>Loại</th></tr>';
+    arr.forEach(function(x){ var a=[].concat(x); a.forEach(function(y,i){ h+='<tr class="'+(kind||'')+'"><td>'+vn(y.date)+'</td><td>'+esc(y.time)+'</td><td>'+esc(y.gv)+'</td><td>'+esc(y.name)+' <span class="small">'+esc(y.id)+'</span></td><td>'+esc(y.type)+(y.status?' ('+esc(y.status)+')':'')+'</td></tr>'; }); });
+    return h+'</table></div>';
+  };
+  var load=function(){
+    S.wMon=monday($('cMon').value); $('cMon').value=S.wMon;
+    call('api_checks',S.wMon).then(function(c){
+      $('cOut').innerHTML=tbl('⚠ GV trùng giờ',c.conflictGV,'cf')+tbl('⚠ Học viên trùng giờ',c.conflictHV,'cf')+tbl('Ngoài giờ rảnh của GV',c.outside)+
+        tbl('Buổi Test / kết thúc khóa',c.tests)+tbl('Học thử',c.trials)+tbl('Buổi nghỉ (KP / MP / GV / ?)',c.absences)+
+        '<div class="card"><b>Khóa chưa rõ số buổi còn lại</b> <span class="tag">'+c.unknown.length+'</span><br>'+c.unknown.map(function(u){return esc(u.id+' '+u.name);}).join(' · ')+'</div>';
+    }).catch(fail);
+  };
+  $('cMon').onchange=load; load();
+};
+
+/* ---------- HỌC VIÊN / TẠO KHÓA ---------- */
+function lichRowsHtml(n){
+  var h=''; for(var i=0;i<n;i++) h+=lichRow();
+  return h;
+}
+function lichRow(r){
+  r=r||{};
+  return '<div class="lichrow"><select class="lThu">'+[2,3,4,5,6,7].map(function(t){return '<option value="'+t+'"'+(+r.thu===t?' selected':'')+'>'+DAYS[t]+'</option>';}).join('')+'</select>'+
+    '<input class="lTime" type="time" step="300" value="'+(r.time||'')+'"><select class="lGv">'+gvOptions(r.gv)+'</select>'+
+    '<input class="lDur" type="number" placeholder="phút (nếu khác)" style="width:120px" value="'+(r.dur||'')+'"><button class="btn g lDel" type="button">✕</button></div>';
+}
+function readLich(box){
+  return [].map.call($(box).querySelectorAll('.lichrow'), function(d){
+    return { thu:+d.querySelector('.lThu').value, time:d.querySelector('.lTime').value, gv:d.querySelector('.lGv').value, dur:d.querySelector('.lDur').value };
+  }).filter(function(r){ return r.time || r.gv; });
+}
+function bindLich(box, addBtn){
+  $(addBtn).onclick=function(){ $(box).insertAdjacentHTML('beforeend', lichRow()); bindDel(box); };
+  bindDel(box);
+}
+function bindDel(box){ [].forEach.call($(box).querySelectorAll('.lDel'), function(b){ b.onclick=function(){ b.parentNode.remove(); }; }); }
+
+VIEWS.hv = function(prefill){
+  prefill=prefill||{};
+  $('main').innerHTML=
+   '<div class="card"><b>➕ Tạo khóa mới / tái khóa</b> <span class="small">Mã HV mới tiếp theo: <b>'+esc(S.nextHv)+'</b>. Tái khóa: nhập Mã HV cũ → mã khóa tự thành HVxxxx-2, -3…</span>'+
+   '<div class="grid2" style="margin-top:8px">'+
+   '<label>Mã HV cũ (chỉ khi tái khóa)<input id="nHv" placeholder="VD HV0012" value="'+esc(prefill.hv||'')+'"></label>'+
+   '<label>Học viên *<input id="nName" value="'+esc(prefill.name||'')+'"></label>'+
+   '<label>Năm sinh<input id="nBorn" type="number" value="'+esc(prefill.born||'')+'"></label>'+
+   '<label>Level<input id="nLevel" value="'+esc(prefill.level||'')+'"></label>'+
+   '<label>Lớp<select id="nLop">'+S.lops.map(function(l){return '<option'+(l===prefill.lop?' selected':'')+'>'+l+'</option>';}).join('')+'</select></label>'+
+   '<label>Loại đăng ký<select id="nDk"><option>Mới</option><option>Tái khóa</option><option>Học thử</option></select></label>'+
+   '<label>Tổng số buổi *<input id="nTotal" type="number" value="'+esc(prefill.total||'')+'"></label>'+
+   '<label>Thời lượng (phút)<select id="nDur"><option>28</option><option>25</option><option>30</option><option>50</option><option>55</option><option>56</option></select></label>'+
+   '<label>Ngày bắt đầu *<input id="nStart" type="date" value="'+esc(prefill.start||'')+'"></label>'+
+   '<label>Sale / CTV<input id="nSale" value="'+esc(prefill.sale||'')+'"></label>'+
+   '<label>Ghi chú<input id="nNote" value="'+esc(prefill.note||'')+'"></label></div>'+
+   '<div style="margin-top:10px"><b>Lịch cố định mỗi tuần</b> <button class="btn g" id="nAdd" type="button">+ thêm buổi</button><div id="nLich">'+lichRowsHtml(prefill.lich?0:2)+'</div></div>'+
+   '<div class="bar" style="margin-top:8px"><button class="btn g" id="nCheck">Kiểm tra trùng giờ</button><button class="btn" id="nSave">Lưu khóa học</button></div><div id="nMsg"></div></div>'+
+   '<div class="card"><div class="bar"><b>🔎 Tra cứu</b><input id="qHv" placeholder="tên (không dấu cũng được) hoặc mã" size="28"><span class="small">Bỏ trống = các khóa chưa kết thúc</span></div><div id="qOut"></div></div>'+
+   '<div id="detail"></div>';
+  if(prefill.lich) prefill.lich.forEach(function(r){ $('nLich').insertAdjacentHTML('beforeend', lichRow(r)); });
+  if(prefill.dk) $('nDk').value=prefill.dk;
+  bindLich('nLich','nAdd');
+  $('nCheck').onclick=function(){
+    var l=readLich('nLich'); if(!l.length) return msg('nMsg','Chưa nhập lịch','warn');
+    l.forEach(function(r){ r.dur=r.dur||$('nDur').value; });
+    $('nMsg').innerHTML='<div class="loading">Đang kiểm tra…</div>';
+    call('api_checkLich',l,$('nStart').value||S.today,'').then(function(m){ $('nMsg').innerHTML=m.length?'<div class="msg warn">'+m.map(esc).join('<br>')+'</div>':'<div class="msg ok">✔ Không trùng, đúng giờ rảnh của GV</div>'; }).catch(function(e){ msg('nMsg',e.message,'err'); });
+  };
+  $('nSave').onclick=function(){
+    var f={ hv:$('nHv').value, name:$('nName').value.trim(), born:$('nBorn').value, level:$('nLevel').value, lop:$('nLop').value, dk:$('nDk').value,
+      total:$('nTotal').value, dur:$('nDur').value, start:$('nStart').value, sale:$('nSale').value, note:$('nNote').value, lich:readLich('nLich'), trialCode:prefill.trialCode||'' };
+    if(f.hv && f.dk==='Mới') f.dk='Tái khóa';
+    $('nSave').disabled=true;
+    call('api_addCourse',f).then(function(id){ $('nSave').disabled=false; msg('nMsg','Đã tạo khóa '+id+'. Xem ở tab Lịch tuần GV.'); refreshInit(); showCourse(id); })
+      .catch(function(e){ $('nSave').disabled=false; msg('nMsg',e.message,'err'); });
+  };
+  var t=null;
+  $('qHv').oninput=function(){ clearTimeout(t); t=setTimeout(search,350); };
+  search();
+};
+function search(){
+  $('qOut').innerHTML='<div class="loading">…</div>';
+  call('api_courses',$('qHv').value.trim()).then(function(r){
+    var h='<div class="scroll" style="max-height:45vh"><table><tr><th>Mã khóa</th><th>Học viên</th><th>Lớp</th><th>Lịch</th><th>Còn lại</th><th>Kết thúc dự kiến</th><th>Trạng thái</th></tr>';
+    r.forEach(function(c){
+      var st=c.status==='Sắp hết khóa'?'style="color:var(--orange);font-weight:bold"':c.status==='Bảo lưu'?'style="color:#6a1b9a"':'';
+      h+='<tr><td><a class="lnk" data-id="'+esc(c.id)+'">'+esc(c.id)+'</a></td><td>'+esc(c.name)+'</td><td>'+esc(c.lop)+'</td><td class="small">'+esc(c.lich)+'</td><td>'+esc(c.remaining)+'/'+esc(c.total)+'</td><td>'+vn(c.end)+'</td><td '+st+'>'+esc(c.status)+'</td></tr>';
+    });
+    $('qOut').innerHTML='<div class="small">'+r.length+' khóa</div>'+h+'</table></div>';
+    [].forEach.call($('qOut').querySelectorAll('a.lnk'), function(a){ a.onclick=function(){ showCourse(a.dataset.id); }; });
+  }).catch(function(e){ $('qOut').innerHTML='<div class="msg err">'+esc(e.message)+'</div>'; });
+}
+function showCourse(id){
+  $('detail').innerHTML='<div class="card loading">Đang tải '+esc(id)+'…</div>';
+  call('api_course',id).then(function(d){
+    if(!d) return $('detail').innerHTML='';
+    var c=d.info, h='<div class="card"><b>'+esc(c.id)+' – '+esc(c.name)+'</b> <span class="tag">'+esc(c.status)+'</span><div class="small">Lớp '+esc(c.lop)+' · Level '+esc(c.level)+' · '+esc(c.dk)+' · Bắt đầu '+vn(c.start)+' · Còn lại '+esc(c.remaining)+'/'+esc(c.total)+' · Kết thúc dự kiến '+vn(c.end)+'</div>'+
+      (c.note?'<div class="small">Ghi chú: '+esc(c.note)+'</div>':'')+
+      '<p><b>Lịch cố định</b></p><table><tr><th>Thứ</th><th>Giờ</th><th>GV</th><th>Phút riêng</th><th>Từ</th><th>Đến</th></tr>'+
+      d.lcd.map(function(r){return '<tr'+(r.to?' style="color:#999"':'')+'><td>'+r.thu+'</td><td>'+r.time+'</td><td>'+esc(r.gv)+'</td><td>'+esc(r.dur)+'</td><td>'+vn(r.from)+'</td><td>'+vn(r.to)+'</td></tr>';}).join('')+'</table>'+
+      '<details style="margin-top:8px"><summary><b>Đổi lịch cố định từ 1 ngày</b> (đổi hẳn thứ/giờ/GV – buổi cũ trước ngày đó giữ nguyên)</summary>'+
+      'Áp dụng từ ngày <input type="date" id="cFrom" value="'+S.today+'"> <button class="btn g" id="cAdd" type="button">+ thêm buổi</button><div id="cLich"></div>'+
+      '<div class="bar"><button class="btn g" id="cCheck">Kiểm tra trùng</button><button class="btn" id="cSave">Lưu lịch mới</button></div><div id="cMsg"></div></details>'+
+      '<div class="bar" style="margin-top:8px"><button class="btn g" id="cZalo">Ghi nhật ký cho khóa này</button><button class="btn g" id="cRe">Tái khóa</button></div>'+
+      '<p><b>Nhật ký</b></p>'+(d.events.length?'<table><tr><th>Nhận</th><th>Loại</th><th>Từ</th><th>Đến</th><th>Nội dung</th></tr>'+d.events.map(function(e){return '<tr><td>'+vn(e.recv)+'</td><td>'+esc(e.type)+'</td><td>'+vn(e.from)+'</td><td>'+vn(e.to)+'</td><td class="small">'+esc(e.text)+'</td></tr>';}).join('')+'</table>':'<div class="small">(chưa có)</div>')+
+      '<p><b>Các buổi (3 tuần trước → sắp tới)</b></p><div class="scroll" style="max-height:40vh"><table><tr><th>Ngày</th><th>Giờ</th><th>GV</th><th>Buổi</th><th>Còn lại</th><th>Loại</th></tr>'+
+      d.lessons.map(function(x){return '<tr class="'+cls(x)+'"><td>'+DAYS[x.thu]+' '+vn(x.date)+'</td><td>'+esc(x.time)+'</td><td>'+esc(x.gv)+'</td><td>'+(x.no||'')+'</td><td>'+(x.remAfter===null?'?':x.remAfter)+'</td><td>'+esc(x.type)+(x.status?' ('+esc(x.status)+')':'')+'</td></tr>';}).join('')+'</table></div></div>';
+    $('detail').innerHTML=h;
+    d.lcd.filter(function(r){return !r.to;}).forEach(function(r){ $('cLich').insertAdjacentHTML('beforeend', lichRow({thu:{T2:2,T3:3,T4:4,T5:5,T6:6,T7:7}[r.thu],time:r.time,gv:r.gv,dur:r.dur})); });
+    bindLich('cLich','cAdd');
+    $('cCheck').onclick=function(){ call('api_checkLich',readLich('cLich').map(function(r){r.dur=r.dur||d.course.dur;return r;}),$('cFrom').value,id).then(function(m){ $('cMsg').innerHTML=m.length?'<div class="msg warn">'+m.map(esc).join('<br>')+'</div>':'<div class="msg ok">✔ Không trùng</div>'; }); };
+    $('cSave').onclick=function(){
+      if(!confirm('Đổi lịch cố định của '+id+' từ '+vn($('cFrom').value)+'?')) return;
+      call('api_changeLich',id,$('cFrom').value,readLich('cLich')).then(function(){ showCourse(id); }).catch(function(e){ msg('cMsg',e.message,'err'); });
+    };
+    $('cZalo').onclick=function(){ S.zaloPre={id:id,name:c.name}; go('zalo'); };
+    $('cRe').onclick=function(){
+      VIEWS.hv({hv:c.hv,name:c.name,born:c.born,level:c.level,lop:c.lop,dk:'Tái khóa',start:c.end?addDays(c.end,1):'',
+        lich:d.lcd.filter(function(r){return !r.to;}).map(function(r){return {thu:{T2:2,T3:3,T4:4,T5:5,T6:6,T7:7}[r.thu],time:r.time,gv:r.gv,dur:r.dur};})});
+      window.scrollTo(0,0);
+    };
+    $('detail').scrollIntoView({behavior:'smooth'});
+  }).catch(function(e){ $('detail').innerHTML='<div class="msg err">'+esc(e.message)+'</div>'; });
+}
+
+/* ---------- NHẬT KÝ ZALO ---------- */
+var EV_HELP = {
+  'Dời buổi':'Dời 1 buổi sang ngày khác: chọn khóa, Từ ngày = ngày học cũ, Đến ngày = ngày học mới (Giờ mới / GV mới nếu đổi). Buổi cũ không học, vẫn trừ 1 buổi ở ngày mới.',
+  'HV nghỉ KP':'Nghỉ không mất phí: chọn khóa + Từ ngày (Đến ngày nếu nghỉ nhiều ngày). Khóa tự kéo dài.',
+  'HV nghỉ MP':'Nghỉ mất phí / vắng không báo / báo sát giờ: vẫn trừ buổi, GV vẫn tính slot.',
+  'HV nghỉ chưa rõ phí':'Tạm tính như KP; hỏi lại Sale rồi sửa loại trong tab NHAT_KY.',
+  'GV nghỉ':'GV nghỉ cả ngày: chọn GIÁO VIÊN, để trống khóa → mọi lớp của GV đó bị hủy. GV chỉ hủy 1 lớp: chọn KHÓA HỌC (+ GV). HV không mất buổi.',
+  'HV nghỉ không tính phí HV và GV':'Chọn khóa + Từ ngày: HV không mất buổi, GV không tính slot (giống HV nghỉ KP).',
+  'HV nghỉ tính phí GV và HV':'Chọn khóa + Từ ngày: HV vẫn bị trừ buổi, GV vẫn tính slot (giống HV nghỉ MP).',
+  'GV nghỉ không tính phí HV và GV':'Chọn khóa (1 lớp) hoặc chỉ chọn GV (mọi lớp của GV) + Từ ngày: HV không mất buổi, GV không tính slot.',
+  'GV hủy lớp (chọn HV)':'BẮT BUỘC chọn khóa học (tên HV) + Ngày: chỉ lớp đó bị hủy. HV không mất buổi, GV không tính slot.',
+  'GV hủy lớp all':'Chọn GIÁO VIÊN + Từ/Đến ngày (không chọn khóa): hủy TẤT CẢ lớp của GV đó. HV không mất buổi, GV không tính slot.',
+  'Học thiếu giờ':'Buổi học bị ngắn (GV mất điện, HV vào muộn…): chọn khóa + Ngày + Thời lượng thực học (phút). Trừ 0,5 hoặc 1 buổi theo tỷ lệ, GV tính slot theo phút thực.',
+  'Bảo lưu':'Chọn khóa + Từ ngày → Đến ngày (tối đa 60 ngày).',
+  'Nghỉ lễ':'Cả trung tâm nghỉ (Tết, 30/4, 2/9…): chỉ cần Từ ngày → Đến ngày, ghi tên lễ ở Nội dung. Không chọn khóa/GV. HV không mất buổi, GV không tính slot.',
+  'Học bù':'Chọn khóa + Ngày học bù (Từ ngày) + Giờ mới + GV mới.',
+  'Đổi giờ/GV 1 buổi':'Chọn khóa + Ngày của buổi đó (Từ ngày) + Giờ mới và/hoặc GV mới. Muốn đổi hẳn: vào Học viên → Đổi lịch cố định.',
+  'Kết thúc sớm/Hủy khóa':'Chọn khóa + Từ ngày = buổi học cuối cùng.',
+  'Tái khóa (ghi nhận)':'Chỉ lưu tin nhắn. Tạo khóa mới ở tab Học viên → Tái khóa.',
+  'Khác (ghi chú)':'Lưu tin nhắn để tra lại.'
+};
+VIEWS.zalo = function(){
+  var pre=S.zaloPre||{}; S.zaloPre=null;
+  $('main').innerHTML='<div class="card"><b>✉ Ghi 1 tin Zalo</b><div class="grid2" style="margin-top:8px">'+
+    '<label>Loại sự kiện *<select id="eType">'+S.types.map(function(t){return '<option>'+esc(t)+'</option>';}).join('')+'</select></label>'+
+    '<label>Khóa học (gõ tên để tìm)<input id="eFind" placeholder="tên học viên" value="'+esc(pre.name||'')+'"><select id="eId"><option value="'+esc(pre.id||'')+'">'+esc(pre.id?pre.id+' '+pre.name:'')+'</option></select></label>'+
+    '<label>Giáo viên (GV nghỉ cả ngày)<select id="eGv">'+gvOptions('')+'</select></label>'+
+    '<label>Từ ngày<input id="eFrom" type="date"></label><label>Đến ngày<input id="eTo" type="date"></label>'+
+    '<label>Giờ mới<input id="eTime" type="time" step="300"></label><label>GV mới<select id="eNewGv">'+gvOptions('')+'</select></label>'+
+    '<label>Thời lượng thực học (phút – Học thiếu giờ)<input id="eDur" type="number" min="1" max="120"></label>'+
+    '<label>Người gửi<input id="eWho"></label><label>Ngày nhận<input id="eRecv" type="date" value="'+S.today+'"></label></div>'+
+    '<div id="eHelp" class="msg warn"></div><label class="small">Nội dung tin Zalo (dán nguyên văn)</label><textarea id="eText"></textarea>'+
+    '<div class="bar" style="margin-top:8px"><button class="btn" id="eSave">Lưu vào nhật ký</button></div><div id="eMsg"></div></div>'+
+    '<div class="card"><b>80 tin gần nhất</b><div id="eList" class="loading">…</div></div>';
+  var help=function(){ $('eHelp').textContent=EV_HELP[$('eType').value]||''; };
+  $('eType').onchange=help; help();
+  var t=null;
+  $('eFind').oninput=function(){ clearTimeout(t); t=setTimeout(function(){
+    call('api_courses',$('eFind').value).then(function(r){ $('eId').innerHTML=r.slice(0,30).map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.id+' '+c.name+' – '+c.lich+' – '+c.status)+'</option>';}).join(''); });
+  },350); };
+  $('eSave').onclick=function(){
+    var f={type:$('eType').value,id:$('eId').value,gv:$('eGv').value,from:$('eFrom').value,to:$('eTo').value,newTime:$('eTime').value,newGv:$('eNewGv').value,dur:$('eDur').value,who:$('eWho').value,recv:$('eRecv').value,text:$('eText').value};
+    if(f.type==='Nghỉ lễ'||f.type==='GV hủy lớp all') f.id='';
+    $('eSave').disabled=true;
+    call('api_addEvent',f).then(function(){ $('eSave').disabled=false; msg('eMsg','Đã lưu. Lịch tuần, chấm công, slot tự tính lại.'); $('eText').value=''; list(); })
+      .catch(function(e){ $('eSave').disabled=false; msg('eMsg',e.message,'err'); });
+  };
+  var list=function(){ call('api_events').then(function(r){
+    $('eList').innerHTML='<div class="scroll" style="max-height:50vh"><table><tr><th>Nhận</th><th>Loại</th><th>Khóa / GV</th><th>Từ</th><th>Đến</th><th>Nội dung</th></tr>'+
+      r.map(function(e){return '<tr><td>'+vn(e.recv)+'</td><td>'+esc(e.type)+'</td><td>'+esc(e.id||e.gv)+'</td><td>'+vn(e.from)+'</td><td>'+vn(e.to)+'</td><td class="small">'+esc(e.text)+'</td></tr>';}).join('')+'</table></div>';
+  }); };
+  list();
+};
+
+/* ---------- HỌC THỬ ---------- */
+VIEWS.trial = function(){
+  $('main').innerHTML='<div class="card"><b>➕ Thêm buổi học thử</b><div class="grid2" style="margin-top:8px">'+
+    '<label>Học viên *<input id="tName"></label><label>Năm sinh<input id="tBorn" type="number"></label><label>Sale<input id="tSale"></label>'+
+    '<label>Ngày học thử *<input id="tDate" type="date"></label><label>Giờ *<input id="tTime" type="time" step="300"></label>'+
+    '<label>Giáo viên<select id="tGv">'+gvOptions('')+'</select></label><label>Thời lượng<select id="tDur"><option>28</option><option>25</option><option>30</option><option>50</option></select></label>'+
+    '<label>Lớp<select id="tLop">'+S.lops.map(function(l){return '<option>'+l+'</option>';}).join('')+'</select></label><label>Ghi chú<input id="tNote"></label></div>'+
+    '<div class="bar" style="margin-top:8px"><button class="btn g" id="tCheck">Kiểm tra trùng</button><button class="btn" id="tSave">Lưu học thử</button></div><div id="tMsg"></div></div>'+
+    '<div class="card"><b>Danh sách học thử</b><div id="tList" class="loading">…</div></div>';
+  $('tCheck').onclick=function(){
+    if(!$('tDate').value) return msg('tMsg','Chọn ngày','warn');
+    call('api_checkLich',[{thu:thuOf($('tDate').value),time:$('tTime').value,gv:$('tGv').value,dur:$('tDur').value}],$('tDate').value,'').then(function(m){ $('tMsg').innerHTML=m.length?'<div class="msg warn">'+m.map(esc).join('<br>')+'</div>':'<div class="msg ok">✔ Không trùng</div>'; });
+  };
+  $('tSave').onclick=function(){
+    var f={name:$('tName').value.trim(),born:$('tBorn').value,sale:$('tSale').value,date:$('tDate').value,time:$('tTime').value,gv:$('tGv').value,dur:$('tDur').value,lop:$('tLop').value,note:$('tNote').value};
+    call('api_addTrial',f).then(function(code){ msg('tMsg','Đã lưu '+code); list(); }).catch(function(e){ msg('tMsg',e.message,'err'); });
+  };
+  var list=function(){ call('api_trials').then(function(r){
+    $('tList').innerHTML='<div class="scroll" style="max-height:55vh"><table><tr><th>Mã</th><th>Học viên</th><th>Ngày</th><th>Giờ</th><th>GV</th><th>Sale</th><th>Kết quả</th><th>Mã khóa</th><th></th></tr>'+
+      r.map(function(t){return '<tr><td>'+esc(t.code)+'</td><td>'+esc(t.name)+'</td><td>'+vn(t.date)+'</td><td>'+esc(t.time)+'</td><td>'+esc(t.gv)+'</td><td>'+esc(t.sale)+'</td><td>'+
+        '<select data-c="'+esc(t.code)+'" class="tRes">'+['Chờ','Đăng ký','Không đăng ký','Hủy'].map(function(o){return '<option'+(o===t.result?' selected':'')+'>'+o+'</option>';}).join('')+'</select></td><td>'+esc(t.id)+'</td>'+
+        '<td>'+(t.id?'':'<button class="btn g tReg" data-c="'+esc(t.code)+'">→ Tạo khóa</button>')+'</td></tr>';}).join('')+'</table></div>';
+    [].forEach.call(document.querySelectorAll('.tRes'),function(s){ s.onchange=function(){ call('api_trialResult',s.dataset.c,s.value).catch(function(e){alert(e.message);}); }; });
+    [].forEach.call(document.querySelectorAll('.tReg'),function(b){ b.onclick=function(){
+      var t=r.filter(function(x){return x.code===b.dataset.c;})[0];
+      GEN++; CUR='hv'; nav(); VIEWS.hv({name:t.name,born:t.born,lop:t.lop,dk:'Mới',sale:t.sale,trialCode:t.code,note:'Từ học thử '+t.code,lich:[{thu:thuOf(t.date),time:t.time,gv:t.gv}]});
+    }; });
+  }); };
+  list();
+};
+
+/* ---------- CHẤM CÔNG ---------- */
+VIEWS.cc = function(){
+  $('main').innerHTML='<div class="bar">Tháng <input type="month" id="mM" value="'+S.month.slice(0,7)+'"> GV <select id="mGv">'+gvOptions('',true)+'</select> <span class="small">x = học · T1/T2 = test · KP/MP/GV/? = nghỉ · TR = học thử · KT = kết thúc sớm · HB = học bù. Copy bảng → dán vào Google Sheet / Excel được.</span></div><div id="mOut" class="loading">…</div>';
+  var load=function(){
+    S.month=$('mM').value+'-01';
+    call('api_attendance',S.month).then(function(a){
+      var gv=$('mGv').value, rows=a.rows.filter(function(r){return !gv||r.gv===gv;});
+      var h='<div class="scroll"><table><tr><th>GV</th><th>Mã</th><th>Học viên</th><th>Lịch</th><th>Tổng</th><th>Còn đầu</th><th>Học</th><th>Còn cuối</th>'+a.days.map(function(d){return '<th style="text-align:center'+(d.thu==='CN'?';background:#ccc':'')+'">'+d.d+'<br><span class="small">'+d.thu+'</span></th>';}).join('')+'</tr>';
+      rows.forEach(function(r){
+        h+='<tr><td style="background:'+color(r.gv)+'">'+esc(r.gv)+'</td><td class="small">'+esc(r.id)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.days)+'</td><td>'+r.total+'</td><td>'+r.dau+'</td><td>'+r.hoc+'</td><td'+(r.cuoi<=2?' style="color:var(--red);font-weight:bold"':'')+'>'+r.cuoi+'</td>'+
+          a.days.map(function(d){ var m=r.marks[d.d]||''; return '<td style="text-align:center" class="'+(m==='T1'?'t-Test1':m==='T2'?'t-Test2':/KP|MP|GV|\?/.test(m)?'t-Nghi':m==='TR'?'t-Trial':'')+'">'+esc(m)+'</td>'; }).join('')+'</tr>';
+      });
+      $('mOut').innerHTML='<div class="small">'+rows.length+' khóa</div>'+h+'</table></div>';
+    }).catch(fail);
+  };
+  $('mM').onchange=load; $('mGv').onchange=load; load();
+};
+
+/* ---------- SLOT & LƯƠNG ---------- */
+VIEWS.slot = function(){
+  $('main').innerHTML='<div class="bar">Tháng <input type="month" id="sM" value="'+S.month.slice(0,7)+'"> <span class="small">Slot 30\' = buổi 25–30\'; slot 60\' = buổi ≥45\' (tính 2); Trial = 1/buổi. Đơn giá & tỷ giá sửa ở tab GIAO_VIEN, CAI_DAT.</span></div><div id="sOut" class="loading">…</div>';
+  var load=function(){
+    S.month=$('sM').value+'-01';
+    call('api_slots',S.month).then(function(s){
+      var f=function(n){ return n===''?'':Number(n).toLocaleString('vi-VN'); };
+      var h='<div class="card"><b>Tổng hợp lương</b><div class="scroll"><table><tr><th>GV</th><th>ESL 30\'</th><th>ESL 60\'</th><th>PRE 30\'</th><th>PRE 60\'</th><th>IELTS 30\'</th><th>IELTS 60\'</th><th>Trial</th><th>Tổng slot</th><th>Kỳ 1 (1–15)</th><th>Kỳ 2</th><th>Peso</th><th>VND</th></tr>';
+      s.sum.forEach(function(r){ h+='<tr><td style="background:'+color(r.gv)+'"><b>'+esc(r.gv)+'</b></td><td>'+r.eslA+'</td><td>'+r.eslB+'</td><td>'+r.preA+'</td><td>'+r.preB+'</td><td>'+r.ieA+'</td><td>'+r.ieB+'</td><td>'+r.trial+'</td><td><b>'+r.total+'</b></td><td>'+r.k1+'</td><td>'+r.k2+'</td><td>'+f(r.peso)+'</td><td>'+f(r.vnd)+'</td></tr>'; });
+      h+='</table></div></div><div class="card"><b>Slot theo ngày</b> <span class="small">(tổng slot quy đổi)</span><div class="scroll"><table><tr><th>Ngày</th>'+s.teachers.map(function(t){return '<th style="background:'+color(t)+'">'+esc(t)+'</th>';}).join('')+'</tr>';
+      s.grid.forEach(function(g){ h+='<tr><td>'+g.thu+' '+vn(g.date).slice(0,5)+'</td>'+g.v.map(function(v){return '<td title="30\': '+v[0]+' · 60\': '+v[1]+' · Trial: '+v[2]+'">'+(v[3]||'')+'</td>';}).join('')+'</tr>'; });
+      $('sOut').innerHTML=h+'</table></div></div>';
+    }).catch(fail);
+  };
+  $('sM').onchange=load; load();
+};
+
+/* ---------- BẢO LƯU ---------- */
+VIEWS.bl = function(){
+  loading();
+  call('api_baoluu').then(function(r){
+    r.sort(function(a,b){ return a.to<b.to?-1:1; });
+    $('main').innerHTML='<div class="card"><b>Danh sách bảo lưu</b> <span class="small">('+r.length+') – thêm bảo lưu ở tab Nhật ký Zalo, loại "Bảo lưu"</span>'+
+      '<div class="msg warn" style="margin-top:6px">Xử lý từng dòng ở cột cuối: <b>Học lại từ</b> = chọn ngày HV đi học lại rồi bấm (lịch tự chạy tiếp từ ngày đó) · <b>Đóng hẳn khóa</b> = HV không quay lại, xóa khỏi danh sách (không sinh buổi học).</div>'+
+      '<div class="scroll"><table><tr><th>Mã khóa</th><th>Học viên</th><th>Từ</th><th>Đến</th><th>Số ngày</th><th>Còn lại</th><th>Trạng thái</th><th>Nội dung</th><th>Xử lý</th></tr>'+
+      r.map(function(b){ var c=/Sắp hết|Quá/.test(b.status)?'style="color:var(--red);font-weight:bold"':/Hết hạn/.test(b.status)?'style="color:#999"':'';
+        return '<tr><td>'+esc(b.id)+'</td><td>'+esc(b.name)+'</td><td>'+vn(b.from)+'</td><td>'+vn(b.to)+'</td><td>'+b.days+'</td><td>'+esc(b.remaining)+'</td><td '+c+'>'+esc(b.status)+'</td><td class="small">'+esc(b.text)+'</td>'+
+          '<td style="white-space:nowrap"><input type="date" class="blDate" value="'+S.today+'"> <button class="btn g blRes" data-row="'+b.row+'" data-id="'+esc(b.id)+'">Học lại từ</button> <button class="btn g blClose" data-row="'+b.row+'" data-id="'+esc(b.id)+'" style="color:var(--red)">Đóng hẳn khóa</button></td></tr>'; }).join('')+'</table></div></div>';
+    var act=function(btn,action,date){
+      if(action==='close' && !confirm('Đóng hẳn khóa '+btn.dataset.id+'? HV sẽ biến khỏi danh sách bảo lưu và không còn buổi học.')) return;
+      btn.disabled=true;
+      call('api_blAction',btn.dataset.row,btn.dataset.id,action,date).then(function(){ VIEWS.bl(); }).catch(function(e){ btn.disabled=false; alert(e.message); });
+    };
+    [].forEach.call(document.querySelectorAll('.blRes'),function(b){ b.onclick=function(){ act(b,'resume',b.parentNode.querySelector('.blDate').value); }; });
+    [].forEach.call(document.querySelectorAll('.blClose'),function(b){ b.onclick=function(){ act(b,'close',''); }; });
+  }).catch(fail);
+};
+
+function refreshInit(){ return call('api_init').then(function(i){ S.nextHv=i.nextHv; S.teachers=i.teachers; }); }
+
+/* ---------- GIÁO VIÊN (admin) ---------- */
+function availRow(r){
+  r=r||{};
+  return '<div class="lichrow"><select class="aThu">'+[2,3,4,5,6,7].map(function(t){return '<option value="'+t+'"'+(+r.thu===t?' selected':'')+'>'+DAYS[t]+'</option>';}).join('')+'</select>'+
+    ' từ <input class="aFrom" type="time" step="1800" value="'+(r.from||'')+'"> đến <input class="aTo" type="time" step="1800" value="'+(r.to||'')+'"><button class="btn g aDel" type="button">✕</button></div>';
+}
+VIEWS.gvs = function(){
+  $('main').innerHTML='<div class="card"><b>➕ Thêm giáo viên mới / thêm giờ rảnh</b> <span class="small">Gõ tên GV đã có = chỉ thêm giờ rảnh cho GV đó.</span><div class="grid2" style="margin-top:8px">'+
+    '<label>Tên GV *<input id="vName" list="vNames"><datalist id="vNames">'+S.teachers.map(function(t){return '<option value="'+esc(t.name)+'">';}).join('')+'</datalist></label>'+
+    '<label>Nhóm<select id="vGroup"><option>PH</option><option>VN</option></select></label>'+
+    '<label>Màu<input id="vColor" type="color" value="#9fc5e8"></label>'+
+    '<label>Giờ làm (ghi chú)<input id="vHours" placeholder="VD T2-T7; 17h-22h"></label>'+
+    '<label>Đơn giá ESL (peso/slot 30\')<input id="vPE" type="number"></label><label>Đơn giá PRE-IELTS<input id="vPP" type="number"></label>'+
+    '<label>Đơn giá IELTS<input id="vPI" type="number"></label><label>Đơn giá Trial (/buổi)<input id="vPT" type="number"></label></div>'+
+    '<div style="margin-top:10px"><b>Giờ rảnh</b> <span class="small">mỗi dòng = 1 khung giờ trong 1 thứ; rảnh nhiều thứ thì thêm nhiều dòng</span> <button class="btn g" id="vAdd" type="button">+ thêm dòng</button><div id="vAvail">'+availRow()+'</div></div>'+
+    '<div class="bar" style="margin-top:8px"><button class="btn" id="vSave">Lưu giáo viên</button></div><div id="vMsg"></div></div>'+
+    '<div class="card"><b>Danh sách giáo viên</b> <span class="small">Sửa / xóa GV hoặc giờ rảnh: vào tab GIAO_VIEN, GIO_RANH trên Google Sheet.</span><div id="vList" class="loading">…</div></div>';
+  var bindDelA=function(){ [].forEach.call(document.querySelectorAll('#vAvail .aDel'),function(b){ b.onclick=function(){ b.parentNode.remove(); }; }); };
+  $('vAdd').onclick=function(){ $('vAvail').insertAdjacentHTML('beforeend', availRow()); bindDelA(); }; bindDelA();
+  $('vName').oninput=function(){ var t=S.teachers.filter(function(x){return x.name.toLowerCase()===$('vName').value.trim().toLowerCase();})[0];
+    $('vSave').textContent=t?'Thêm giờ rảnh cho '+t.name:'Lưu giáo viên'; };
+  $('vSave').onclick=function(){
+    var f={name:$('vName').value.trim(),group:$('vGroup').value,color:$('vColor').value.toUpperCase(),hours:$('vHours').value,pE:$('vPE').value,pP:$('vPP').value,pI:$('vPI').value,pT:$('vPT').value,
+      avail:[].map.call(document.querySelectorAll('#vAvail .lichrow'),function(d){ return {thu:+d.querySelector('.aThu').value,from:d.querySelector('.aFrom').value,to:d.querySelector('.aTo').value}; })};
+    if(!f.name) return msg('vMsg','Chưa nhập tên giáo viên','warn');
+    $('vSave').disabled=true;
+    call('api_addTeacher',f).then(function(r){ $('vSave').disabled=false;
+      msg('vMsg',(r.isNew?'Đã thêm GV '+r.name:'GV '+r.name+' đã có')+' · thêm '+r.avail+' khung giờ rảnh. GV đã có trong ô chọn GV, Lưới, Giờ trống.');
+      refreshInit().then(list); })
+      .catch(function(e){ $('vSave').disabled=false; msg('vMsg',e.message,'err'); });
+  };
+  var list=function(){ call('api_teachers').then(function(r){
+    $('vList').innerHTML='<div class="small">'+r.length+' giáo viên</div><div class="scroll" style="max-height:60vh"><table><tr><th>GV</th><th>Nhóm</th><th>Giờ làm</th><th>Giờ rảnh</th><th>ESL</th><th>PRE</th><th>IELTS</th><th>Trial</th></tr>'+
+      r.map(function(t){ var by={}; t.avail.forEach(function(a){ (by[a.thu]=by[a.thu]||[]).push(a.from+'–'+a.to); });
+        return '<tr><td style="background:'+esc(t.color||'#fff')+'"><b>'+esc(t.name)+'</b></td><td>'+esc(t.group)+'</td><td class="small">'+esc(t.hours)+'</td><td class="small">'+
+          (Object.keys(by).sort().map(function(k){ return DAYS[k]+' '+by[k].join(', '); }).join(' · ')||'<span style="color:var(--red)">chưa có</span>')+'</td><td>'+esc(t.pE)+'</td><td>'+esc(t.pP)+'</td><td>'+esc(t.pI)+'</td><td>'+esc(t.pT)+'</td></tr>'; }).join('')+'</table></div>';
+  }).catch(fail); };
+  list();
+};
+
+/* ---------- MY SLOTS (link giáo viên) ---------- */
+VIEWS.myslot = function(){
+  $('main').innerHTML='<div class="bar">Month <input type="month" id="yM" value="'+S.month.slice(0,7)+'"> Teacher <select id="yGv">'+gvOptions(S.yGv||'')+'</select>'+
+    '</div><div id="yOut"></div>';
+  var load=function(){
+    S.month=$('yM').value+'-01'; S.yGv=$('yGv').value;
+    if(!S.yGv){ $('yOut').innerHTML='<div class="msg warn">Choose your name in Teacher.</div>'; return; }
+    $('yOut').innerHTML='<div class="loading">…</div>';
+    call('api_mySlots',S.month,S.yGv).then(function(r){
+      if(!r){ $('yOut').innerHTML='<div class="msg warn">No slots for this teacher.</div>'; return; }
+      var u=r.sum, h='<div class="card"><b>'+esc(r.gv)+' – '+esc($('yM').value)+'</b><table style="margin-top:8px"><tr><th></th><th>30\'</th><th>60\'</th><th>Trial</th><th>Total slots</th><th>1st half (1–15)</th><th>2nd half (16–end)</th></tr>'+
+        '<tr><td><b>All</b></td><td>'+u.a30+'</td><td>'+u.a60+'</td><td>'+u.trial+'</td><td><b>'+u.total+'</b></td><td>'+u.k1+'</td><td>'+u.k2+'</td></tr>'+
+        '<tr class="small"><td>ESL</td><td>'+u.eslA+'</td><td>'+u.eslB+'</td><td colspan="4"></td></tr><tr class="small"><td>PRE-IELTS</td><td>'+u.preA+'</td><td>'+u.preB+'</td><td colspan="4"></td></tr><tr class="small"><td>IELTS</td><td>'+u.ieA+'</td><td>'+u.ieB+'</td><td colspan="4"></td></tr></table></div>'+
+        '<div class="card"><b>By day</b><div class="scroll"><table><tr><th>Day</th><th>30\'</th><th>60\'</th><th>Trial</th><th>Slots</th></tr>'+
+        r.days.map(function(d){ return '<tr><td>'+DAYS_EN[thuOf(d.date)]+' '+vn(d.date)+'</td><td>'+(d.a30||'')+'</td><td>'+(d.a60||'')+'</td><td>'+(d.trial||'')+'</td><td><b>'+d.total+'</b></td></tr>'; }).join('')+'</table></div></div>';
+      $('yOut').innerHTML=h;
+    }).catch(fail);
+  };
+  $('yM').onchange=load; $('yGv').onchange=load; load();
+};
+
+
+/* ---------- LỊCH HÀNG NGÀY + GIỜ TRỐNG (link CTV) ---------- */
+VIEWS.range = function(){
+  if(!S.rFrom) S.rFrom=S.today;
+  if(!S.rTo) S.rTo=addDays(S.today,6);
+  $('main').innerHTML='<div class="bar">Từ ngày <input type="date" id="rFrom" value="'+S.rFrom+'"> Đến ngày <input type="date" id="rTo" value="'+S.rTo+'"> GV <select id="rGv">'+gvOptions(S.rGv||'',true)+'</select> <input id="rQ" placeholder="tìm học viên" size="13" value="'+esc(S.rQ||'')+'"> <button class="btn" id="rGo">Xem lịch</button></div><div id="rOut" class="loading">…</div>';
+  var load=function(){
+    S.rFrom=$('rFrom').value||S.today; S.rTo=$('rTo').value||S.rFrom; S.rGv=$('rGv').value; S.rQ=$('rQ').value.trim().toLowerCase();
+    if(S.rTo<S.rFrom){ var t=S.rFrom; S.rFrom=S.rTo; S.rTo=t; }
+    if(addDays(S.rFrom,62)<S.rTo){ S.rTo=addDays(S.rFrom,62); $('rOut').innerHTML='<div class="msg warn">Khoảng ngày quá dài, đã rút gọn còn tối đa 62 ngày.</div><div class="loading">…</div>'; }
+    var mons=[], m=monday(S.rFrom);
+    while(m<=S.rTo){ mons.push(m); m=addDays(m,7); }
+    var lessons=[], frees=[], chain=Promise.resolve();
+    mons.forEach(function(mon){
+      chain=chain.then(function(){ return call('api_week',mon,''); }).then(function(L){ L.forEach(function(x){ if(x.date>=S.rFrom&&x.date<=S.rTo) lessons.push(x); }); });
+      if(S.rGv){ chain=chain.then(function(){ return call('api_free',mon); }).then(function(F){ F.rows.forEach(function(r){ if(r.gv===S.rGv){ F.days.forEach(function(d,i){ if(d>=S.rFrom&&d<=S.rTo) frees.push({date:d,free:r.free[i]}); }); } }); }); }
+    });
+    chain.then(function(){
+      lessons=lessons.filter(function(x){ return (!S.rGv||x.gv===S.rGv)&&(!S.rQ||x.name.toLowerCase().indexOf(S.rQ)>=0); });
+      lessons.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:(a.time<b.time?-1:1); });
+      var h='', byDay={};
+      lessons.forEach(function(x){ (byDay[x.date]=byDay[x.date]||[]).push(x); });
+      Object.keys(byDay).sort().forEach(function(d){
+        h+='<div class="day"><h3>'+DAYS[thuOf(d)]+' '+vn(d)+' <span class="small">('+byDay[d].length+' buổi)</span></h3><table><tr><th>Giờ</th><th>GV</th><th>Học viên</th><th>Tuổi</th><th>Level</th><th>Lớp</th><th>Phút</th><th>Buổi</th><th>Loại buổi</th></tr>';
+        byDay[d].forEach(function(x){ h+='<tr class="'+cls(x)+'"><td>'+esc(x.time)+'</td><td style="background:'+color(x.gv)+'">'+esc(x.gv)+'</td><td>'+esc(x.name)+'</td><td>'+esc(x.age)+'</td><td>'+esc(x.level)+'</td><td>'+esc(x.lop)+'</td><td>'+x.dur+'</td><td>'+(x.no?x.no+'/'+x.total:'')+'</td><td>'+esc(x.type)+(x.status?' ('+esc(x.status)+')':'')+'</td></tr>'; });
+        h+='</table></div>';
+      });
+      if(S.rGv){
+        h+='<div class="card"><b>Giờ trống của '+esc(S.rGv)+'</b> <span class="small">(giờ bắt đầu còn nhận được buổi 30 phút, trong giờ rảnh của GV)</span><table style="margin-top:6px"><tr><th>Ngày</th><th>Giờ còn trống</th></tr>'+
+          frees.map(function(f){ return '<tr><td>'+DAYS[thuOf(f.date)]+' '+vn(f.date)+'</td><td>'+esc(f.free||'—')+'</td></tr>'; }).join('')+'</table></div>';
+      }
+      $('rOut').innerHTML=(lessons.length?'<div class="small">'+lessons.length+' buổi từ '+vn(S.rFrom)+' đến '+vn(S.rTo)+'</div>':'<div class="msg warn">Không có buổi nào trong khoảng này</div>')+h;
+    }).catch(fail);
+  };
+  $('rGo').onclick=load; load();
+};
+
+/* ---------- LỊCH CHI TIẾT HV (gửi phụ huynh — Admin + CTV) ---------- */
+VIEWS.detail = function(){
+  $('main').innerHTML='<div class="bar">Tìm học viên <input id="dQ" placeholder="gõ tên hoặc mã khóa" size="22"> <button class="btn" id="dGo">Tìm</button></div><div id="dOut" style="margin-bottom:10px"></div><div id="dList"></div>';
+  var pick=function(id){
+    $('dOut').innerHTML='<div class="loading">Đang tính…</div>'; window.scrollTo(0,0);
+    call('api_studentDetail',id).then(function(r){
+      if(!r){ $('dOut').innerHTML='<div class="msg warn">Không tìm thấy khóa.</div>'; return; }
+      var head='Học viên: '+esc(r.name)+(r.dk==='Tái khóa'?' bắt đầu tái khóa từ ':' bắt đầu khóa từ ')+vn(r.start)+', khóa '+esc(r.total)+' buổi '+esc(r.dur)+"&#8242;";
+      var h='<div style="border:1px solid #ccc;max-width:1100px"><div style="background:#ed7d31;color:#fff;font-weight:bold;padding:8px 10px">'+head+'</div>';
+      h+='<div style="display:flex;flex-wrap:wrap;gap:0;align-items:flex-start">';
+      r.months.forEach(function(m){
+        h+='<table style="border-collapse:collapse;margin:0"><tr><th colspan="2" style="background:#fff2cc;border:1px solid #ccc;padding:4px 10px">'+esc(m.label)+'</th></tr><tr><th style="border:1px solid #ccc;padding:3px 8px">Ngày</th><th style="border:1px solid #ccc;padding:3px 8px">Tình trạng</th></tr>';
+        m.rows.forEach(function(x){ h+='<tr><td style="border:1px solid #ccc;padding:3px 8px">'+esc(x.date)+'</td><td style="border:1px solid #ccc;padding:3px 8px'+(x.red?';color:red':'')+'">'+esc(x.text)+'</td></tr>'; });
+        h+='<tr><td colspan="2" style="background:#bdd7ee;border:1px solid #ccc;text-align:center;font-weight:bold;padding:3px">'+m.total+'</td></tr></table>';
+      });
+      h+='</div><div style="background:#ed7d31;color:#fff;font-weight:bold;padding:8px 10px">Tính đến hết ngày '+esc(r.lastDate)+' là :'+esc(r.expr||'0')+' = '+r.sum+' buổi học ( học viên học '+r.sum+' buổi )'+(r.remaining!==null&&r.remaining!==''&&r.remaining!==undefined?' – còn lại '+esc(r.remaining)+' buổi':'')+'</div></div>';
+      h+='<div class="small" style="margin-top:6px">Gửi phụ huynh: bôi đen bảng trên → Copy → dán vào Zalo / Sheet / Excel, hoặc in trang này.</div>';
+      $('dOut').innerHTML=h;
+    }).catch(fail);
+  };
+  var search=function(){
+    var q=$('dQ').value.trim();
+    $('dList').innerHTML='<div class="loading">…</div>';
+    call('api_courses',q).then(function(rows){
+      if(!rows.length){ $('dList').innerHTML='<div class="msg warn">Không thấy học viên nào.</div>'; return; }
+      $('dList').innerHTML='<div class="small">'+rows.length+' khóa'+(q?'':' đang học')+' – gõ tên để tìm nhanh</div><div style="overflow-x:auto"><table><tr><th>Mã khóa</th><th>Học viên</th><th>Lớp</th><th>Trạng thái</th><th></th></tr>'+rows.map(function(c){ return '<tr><td>'+esc(c.id)+'</td><td>'+esc(c.name)+'</td><td>'+esc(c.lop)+'</td><td>'+esc(c.status)+'</td><td><button class="btn g" data-id="'+esc(c.id)+'">Xem chi tiết</button></td></tr>'; }).join('')+'</table></div>';
+      [].forEach.call($('dList').querySelectorAll('button[data-id]'),function(b){ b.onclick=function(){ pick(b.dataset.id); }; });
+    }).catch(fail);
+  };
+  $('dGo').onclick=search;
+  $('dQ').addEventListener('keydown',function(e){ if(e.key==='Enter') search(); });
+  search();   // mở tab là thấy sẵn mọi học viên đang học
+};
+
+/* ===== Bản GitHub: gọi Web App qua fetch (đăng nhập bằng tài khoản ở tab TAI_KHOAN) ===== */
+var API = 'https://script.google.com/macros/s/AKfycbzb3HycWn8AOWTsSTg5V6JTZPkq9FPEUwZyb08E4ir0R08lr7T56-7ZYRuCO5gs7E6h/exec', TOK = '';
+try { TOK = localStorage.getItem('bv_tok') || ''; } catch (e) {}
+function post(b){ return fetch(API,{method:'POST',body:JSON.stringify(b)}).then(function(r){ return r.json(); }).then(function(r){ if(!r.ok) throw new Error(r.error); return r.data; }); }
+function call(fn){ var args=[].slice.call(arguments,1), g=GEN; return new Promise(function(ok,ko){
+  post({action:'call',token:TOK,fn:fn,args:args}).then(function(r){ if(g===GEN) ok(r); },function(e){
+    if(/hết hạn|Đổi mật khẩu tạm/.test(e.message)){ showLogin(e.message); return; }
+    if(g===GEN) ko(e); }); }); }
+function setTok(t){ TOK=t||''; try{ if(TOK) localStorage.setItem('bv_tok',TOK); else localStorage.removeItem('bv_tok'); }catch(e){} }
+function hdrUser(on){ ['bell','usr','pwBtn','outBtn'].forEach(function(id){ $(id).style.display=on?'':'none'; }); }
+
+function showLogin(m){
+  GEN++; setTok(''); hdrUser(false); $('nav').innerHTML='';
+  $('main').innerHTML='<div class="login card"><h2>Đăng nhập</h2><p class="small">Tài khoản do admin cấp (tab TAI_KHOAN). Lần đầu dùng mật khẩu tạm, hệ thống sẽ bắt đổi.</p>'+
+    '<label>Tên đăng nhập<input id="lU" autocomplete="username" autocapitalize="off"></label><label>Mật khẩu<input id="lP" type="password" autocomplete="current-password"></label>'+
+    '<button class="btn" id="lGo">Đăng nhập</button><div id="lMsg">'+(m?'<div class="msg warn">'+esc(m)+'</div>':'')+'</div>'+
+    '<p class="small" style="margin-top:14px">Giáo viên: <i>Teacher login – use the username the center gave you.</i></p></div>';
+  var go1=function(){ $('lGo').disabled=true; post({action:'login',u:$('lU').value,p:$('lP').value}).then(function(r){
+      setTok(r.token); if(r.must) showChangePw(true); else start(); })
+    .catch(function(e){ $('lGo').disabled=false; msg('lMsg',e.message,'err'); }); };
+  $('lGo').onclick=go1; $('lP').addEventListener('keydown',function(e){ if(e.key==='Enter') go1(); });
+  setTimeout(function(){ $('lU').focus(); },50);
+}
+function showChangePw(force){
+  GEN++; if(force){ $('nav').innerHTML=''; hdrUser(false); }
+  $('main').innerHTML='<div class="login card"><h2>Đổi mật khẩu</h2>'+(force?'<div class="msg warn">Bạn đang dùng mật khẩu tạm – đổi mật khẩu riêng (tối thiểu 6 ký tự) để tiếp tục.</div>':'')+
+    '<label>Mật khẩu hiện tại<input id="cO" type="password" autocomplete="current-password"></label><label>Mật khẩu mới<input id="cN" type="password" autocomplete="new-password"></label>'+
+    '<label>Nhập lại mật khẩu mới<input id="cN2" type="password" autocomplete="new-password"></label><div class="bar"><button class="btn" id="cGo">Lưu mật khẩu</button>'+(force?'':'<button class="btn g" id="cBack">Quay lại</button>')+'</div><div id="cMsg"></div></div>';
+  $('cBack').onclick=function(){ go(CUR||'week'); };
+  $('cGo').onclick=function(){
+    if($('cN').value!==$('cN2').value){ msg('cMsg','Hai lần nhập mật khẩu mới không giống nhau','err'); return; }
+    $('cGo').disabled=true;
+    post({action:'changePw',token:TOK,old:$('cO').value,p:$('cN').value}).then(function(){ if(force) start(); else msg('cMsg','Đã đổi mật khẩu.'); })
+      .catch(function(e){ $('cGo').disabled=false; msg('cMsg',e.message,'err'); });
+  };
+}
+function logout(){ var t=TOK; setTok(''); post({action:'logout',token:t}).catch(function(){}); showLogin('Đã đăng xuất.'); }
+function tabsOf(){ return MODE==='admin'?TABS_ADMIN:MODE==='ctv'?TABS_CTV:TABS_GV; }
+function start(){
+  $('main').innerHTML='<div class="loading">Đang tải dữ liệu…</div>';
+  call('api_init').then(function(i){
+    MODE=i.role; S=i; S.wMon=i.monday; S.gDay=i.today; S.wGv=MODE==='gv'?i.gv:''; S.yGv=i.gv||'';
+    if(thuOf(S.gDay)===1) S.gDay=addDays(S.gDay,1);
+    $('brand').textContent=MODE==='admin'?'ADMIN':MODE==='ctv'?'CTV VIEW':'Teacher View';
+    $('hdr').textContent=' · '+vn(i.today); $('usr').textContent=i.u+(i.gv?' ('+i.gv+')':'');
+    $('pwBtn').textContent=MODE==='gv'?'Password':'Đổi mật khẩu'; $('outBtn').textContent=MODE==='gv'?'Log out':'Đăng xuất';
+    hdrUser(true);
+    var t=null; try{ t=localStorage.getItem('bv_tab'); }catch(e){}
+    var ok=tabsOf().some(function(x){return x[0]===t;});
+    go(ok?t:(MODE==='ctv'?'range':'week'));
+    bell();
+  }).catch(function(e){ fail(e); });
+}
+$('pwBtn').onclick=function(){ showChangePw(false); };
+$('outBtn').onclick=logout;
+$('bell').onclick=function(){ go('notify'); };
+
+/* ---------- THÔNG BÁO / NHẮC LỊCH ---------- */
+var LV = { bad:['#fde7e7','#c62828','●'], warn:['#fff4e0','#8a4b00','▲'], info:['#e8f1fb','#1f4e79','ℹ'] };
+function bell(){ post({action:'call',token:TOK,fn:'api_notify',args:[]}).then(function(r){
+  var n=r.items.filter(function(x){return x.lv!=='info';}).length; $('bellN').textContent=n||''; $('bellN').style.display=n?'':'none';
+  S.notify=r; }).catch(function(){}); }
+setInterval(function(){ if(TOK && MODE) bell(); }, 10*60*1000);   // 10 phút làm mới chuông 1 lần
+VIEWS.notify = function(){
+  loading();
+  call('api_notify').then(function(r){
+    S.notify=r; var tabs=tabsOf().map(function(t){return t[0];});
+    var n=r.items.filter(function(x){return x.lv!=='info';}).length; $('bellN').textContent=n||''; $('bellN').style.display=n?'':'none';
+    $('main').innerHTML='<div class="card"><b>'+(MODE==='gv'?'Reminders':'Thông báo & nhắc lịch')+' – '+vn(r.today)+'</b><p class="small">'+(MODE==='gv'?'Updated every time you open this tab.':'Tự cập nhật mỗi lần mở tab; chuông trên cùng làm mới 10 phút/lần.')+'</p>'+
+      (r.items.length?r.items.map(function(x,i){ var c=LV[x.lv]||LV.info;
+        return '<div class="ntf" style="background:'+c[0]+';border-left-color:'+c[1]+'"><div><b style="color:'+c[1]+'">'+c[2]+' '+esc(x.title)+'</b>'+(x.text?'<div class="small">'+esc(x.text)+'</div>':'')+'</div>'+
+          (tabs.indexOf(x.go)>=0?'<button class="btn g" data-go="'+x.go+'">'+(MODE==='gv'?'Open':'Xem')+'</button>':'')+'</div>'; }).join('')
+        :'<div class="msg ok">'+(MODE==='gv'?'Nothing to remind.':'Không có gì cần nhắc.')+'</div>')+'</div>';
+    [].forEach.call($('main').querySelectorAll('[data-go]'),function(b){ b.onclick=function(){ go(b.dataset.go); }; });
+  }).catch(fail);
+};
+
+/* ---------- BÁO CÁO (biểu đồ SVG) ---------- */
+function hbars(rows, fmt){   // rows: [label, [giá trị...], [màu...]]
+  var mx=Math.max.apply(null,rows.map(function(r){ return r[1].reduce(function(a,b){return a+b;},0); }).concat([1]));
+  return '<div class="hb2">'+rows.map(function(r){ var tot=r[1].reduce(function(a,b){return a+b;},0);
+    return '<div class="hbr"><span class="hbl">'+esc(r[0])+'</span><span class="hbt">'+r[1].map(function(v,i){ return v?'<i style="width:'+(v/mx*100)+'%;background:'+r[2][i]+'" title="'+v+'"></i>':''; }).join('')+'</span><b>'+(fmt?fmt(tot):tot)+'</b></div>'; }).join('')+'</div>';
+}
+function legend(items){ return '<div class="small lg">'+items.map(function(x){ return '<span><span class="sw" style="background:'+x[1]+'"></span>'+esc(x[0])+'</span>'; }).join('')+'</div>'; }
+function weekChart(W){
+  var w=640,h=200,pl=30,pb=34,bw=(w-pl)/W.length, mx=Math.max.apply(null,W.map(function(x){return x.learned+x.planned+x.off;}).concat([1]));
+  var y=function(v){ return (h-pb)*(1-v/mx); }, s='<svg viewBox="0 0 '+w+' '+h+'" class="wk" role="img" aria-label="Số buổi theo tuần">';
+  for(var k=0;k<=4;k++){ var v=Math.round(mx*k/4); s+='<line x1="'+pl+'" x2="'+w+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="#e3e8ef"/><text x="'+(pl-4)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="10" fill="#555">'+v+'</text>'; }
+  W.forEach(function(x,i){ var X=pl+i*bw+bw*0.18, BW=bw*0.64, acc=0;
+    [['learned','#1f4e79'],['planned','#9dc3e6'],['off','#bdbdbd']].forEach(function(p){ var v=x[p[0]]; if(!v) return;
+      s+='<rect x="'+X+'" y="'+y(acc+v)+'" width="'+BW+'" height="'+(y(acc)-y(acc+v))+'" fill="'+p[1]+'"><title>'+v+'</title></rect>'; acc+=v; });
+    s+='<text x="'+(X+BW/2)+'" y="'+(y(acc)-4)+'" text-anchor="middle" font-size="11" font-weight="700">'+(acc||'')+'</text>';
+    s+='<text x="'+(X+BW/2)+'" y="'+(h-pb+14)+'" text-anchor="middle" font-size="10" fill="#333">'+x.monday.slice(8)+'/'+x.monday.slice(5,7)+'</text>'; });
+  return s+'</svg>';
+}
+var ST_NAME = { x:'Đã học', TR:'Học thử', KP:'Nghỉ KP', MP:'Nghỉ MP', GV:'GV nghỉ', BL:'Bảo lưu', LE:'Nghỉ lễ', '?':'Chưa rõ phí' };
+VIEWS.reports = function(){
+  S.rMonth=S.rMonth||S.month;
+  $('main').innerHTML='<div class="bar">Tháng <input type="month" id="rM" value="'+S.rMonth.slice(0,7)+'"><button class="btn g" id="rCsv">Tải CSV slot GV</button></div><div id="rBody" class="loading">Đang tính…</div>';
+  $('rM').onchange=function(){ S.rMonth=$('rM').value+'-01'; VIEWS.reports(); };
+  call('api_reports',S.rMonth).then(function(r){
+    S.rep=r;
+    var st=Object.keys(r.status).sort(function(a,b){return r.status[b]-r.status[a];}).map(function(k){ return [ST_NAME[k]||k,[r.status[k]],[k==='x'?'#1f4e79':k==='TR'?'#5b9bd5':k==='MP'?'#ef6c00':'#9e9e9e']]; });
+    var cs=Object.keys(r.courses).sort(function(a,b){return r.courses[b]-r.courses[a];}).map(function(k){ return [k,[r.courses[k]],[/Sắp hết/.test(k)?'#ef6c00':/Đang học/.test(k)?'#2e7d32':/Bảo lưu/.test(k)?'#8e24aa':'#9e9e9e']]; });
+    var tot=r.slots.reduce(function(a,b){return a+b.total;},0), done=r.weeks.reduce(function(a,b){return a+b.learned;},0);
+    $('rBody').className='';
+    $('rBody').innerHTML='<div class="kpis">'+
+        kpi('Buổi đã học (tháng)', r.status.x||0)+kpi('Slot GV (tháng, tới hôm nay)', tot)+kpi('Khóa đang học', (r.courses['Đang học']||0)+(r.courses['Sắp hết khóa']||0))+
+        kpi('Sắp hết khóa', r.courses['Sắp hết khóa']||0)+kpi('Học thử: đăng ký / tổng', r.trials.dk+' / '+r.trials.total)+'</div>'+
+      '<div class="card"><b>Số buổi 8 tuần gần nhất</b>'+legend([['Đã học','#1f4e79'],['Sắp tới (tuần này)','#9dc3e6'],['Nghỉ / không học','#bdbdbd']])+weekChart(r.weeks)+'<p class="small">Tổng đã học 8 tuần: '+done+' buổi.</p></div>'+
+      '<div class="cols2"><div class="card"><b>Tình trạng buổi trong tháng</b>'+hbars(st)+'</div><div class="card"><b>Khóa học theo trạng thái</b>'+hbars(cs)+'</div></div>'+
+      '<div class="card"><b>Slot theo giáo viên – tháng '+r.month.slice(5,7)+'/'+r.month.slice(0,4)+'</b>'+legend([['Kỳ 1 (1–15)','#1f4e79'],['Kỳ 2 (16–cuối)','#9dc3e6']])+
+        hbars(r.slots.map(function(x){ return [x.gv,[x.k1,x.k2],['#1f4e79','#9dc3e6']]; }))+'</div>'+
+      '<div class="card"><b>Học thử</b><p>Tổng '+r.trials.total+' · Đăng ký '+r.trials.dk+' · Không đăng ký '+r.trials.no+' · Chờ kết quả '+r.trials.wait+
+        (r.trials.dk+r.trials.no?' · Tỷ lệ chốt '+Math.round(r.trials.dk/(r.trials.dk+r.trials.no)*100)+'%':'')+'</p></div>';
+  }).catch(fail);
+  $('rCsv').onclick=function(){ if(!S.rep) return; var rows=[['Giáo viên','Kỳ 1','Kỳ 2','Tổng slot']].concat(S.rep.slots.map(function(x){return [x.gv,x.k1,x.k2,x.total];}));
+    var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+rows.map(function(r){return r.join(',');}).join('\n')],{type:'text/csv'})); a.download='slot-'+S.rep.month.slice(0,7)+'.csv'; a.click(); };
+};
+function kpi(t,v){ return '<div class="kpi"><span class="small">'+esc(t)+'</span><b>'+esc(v)+'</b></div>'; }
+
+/* ---------- TÀI KHOẢN ---------- */
+VIEWS.accounts = function(){
+  $('main').innerHTML='<div class="card"><b>➕ Thêm tài khoản</b> <span class="small">mật khẩu tạm 1234 – người dùng phải đổi ở lần đăng nhập đầu</span><div class="grid2" style="margin-top:8px">'+
+    '<label>Tên đăng nhập *<input id="aU" placeholder="vd: leah, ctv.lan" autocapitalize="off"></label><label>Vai trò *<select id="aR"><option value="gv">Giáo viên</option><option value="ctv">CTV / Sale (chỉ xem)</option><option value="admin">Admin</option></select></label>'+
+    '<label>Giáo viên (vai trò GV)<select id="aG">'+gvOptions('')+'</select></label><label>Ghi chú<input id="aN"></label></div>'+
+    '<div class="bar" style="margin-top:8px"><button class="btn" id="aSave">Thêm</button></div><div id="aMsg"></div></div><div class="card"><b>Danh sách tài khoản</b><div id="aList" class="loading">…</div></div>';
+  var list=function(){ call('api_accounts').then(function(r){
+    var RV={admin:'Admin',gv:'Giáo viên',ctv:'CTV / Sale'};
+    $('aList').innerHTML='<div class="scroll"><table><tr><th>Tên đăng nhập</th><th>Vai trò</th><th>Giáo viên</th><th>Mật khẩu</th><th>Ghi chú</th><th></th></tr>'+r.map(function(a){
+      return '<tr><td><b>'+esc(a.u)+'</b></td><td>'+(RV[a.role]||esc(a.role))+'</td><td>'+esc(a.gv)+'</td><td>'+(a.must?'<span style="color:#8a4b00">Tạm (1234)</span>':'<span style="color:#2e7d32">Đã đổi</span>')+'</td><td class="small">'+esc(a.note)+'</td>'+
+        '<td>'+(a.must?'':'<button class="btn g" data-u="'+esc(a.u)+'">Đặt lại 1234</button>')+'</td></tr>'; }).join('')+'</table></div>';
+    [].forEach.call($('aList').querySelectorAll('[data-u]'),function(b){ b.onclick=function(){ if(!confirm('Đặt lại mật khẩu của '+b.dataset.u+' về 1234?')) return;
+      b.disabled=true; call('api_resetPw',b.dataset.u).then(list).catch(function(e){ msg('aMsg',e.message,'err'); }); }; });
+  }).catch(fail); };
+  $('aSave').onclick=function(){ $('aSave').disabled=true;
+    call('api_addAccount',{u:$('aU').value,role:$('aR').value,gv:$('aG').value,note:$('aN').value}).then(function(){ $('aSave').disabled=false; msg('aMsg','Đã thêm '+$('aU').value+' – mật khẩu tạm 1234.'); $('aU').value=''; list(); })
+      .catch(function(e){ $('aSave').disabled=false; msg('aMsg',e.message,'err'); }); };
+  list();
+};
+
+/* ---------- KÉO-THẢ LỊCH (ghi thẳng vào Sheet) ---------- */
+// Kéo 1 buổi sang ngày khác → hỏi: chỉ buổi này (NHAT_KY "Dời buổi" / "Đổi giờ/GV 1 buổi") hay từ tuần này trở đi (đổi LICH_CO_DINH).
+VIEWS.plan = function(){
+  $('main').innerHTML='<div class="bar">Tuần từ <input type="date" id="pMon" value="'+S.wMon+'"><button class="btn g" id="pPrev">◀</button><button class="btn g" id="pNext">▶</button>'+
+    ' Giáo viên <select id="pGv">'+gvOptions(S.wGv,true)+'</select><span class="small">Kéo thẻ buổi học sang ngày khác (hoặc bấm vào thẻ) để dời / đổi giờ / đổi GV.</span></div><div id="pBoard" class="loading">Đang tải…</div>';
+  $('pMon').onchange=function(){ S.wMon=monday($('pMon').value); VIEWS.plan(); };
+  $('pPrev').onclick=function(){ S.wMon=addDays(S.wMon,-7); VIEWS.plan(); };
+  $('pNext').onclick=function(){ S.wMon=addDays(S.wMon,7); VIEWS.plan(); };
+  $('pGv').onchange=function(){ S.wGv=$('pGv').value; VIEWS.plan(); };
+  call('api_week',S.wMon,S.wGv).then(function(L){
+    var days=[0,1,2,3,4,5].map(function(i){ return addDays(S.wMon,i); }), by={};
+    L.forEach(function(x,i){ x._i=i; (by[x.date]=by[x.date]||[]).push(x); });
+    S.planL=L;
+    $('pBoard').className='board';
+    $('pBoard').innerHTML=days.map(function(d){ var past=d<S.today;
+      return '<div class="col'+(past?' past':'')+'" data-d="'+d+'"><h4>'+DAYS[thuOf(d)]+' '+vn(d).slice(0,5)+' <span class="small">'+((by[d]||[]).length)+'</span></h4>'+
+        (by[d]||[]).map(function(x){ var mv=!x.status&&x.id&&x.type!=='Trial'&&!past;
+          return '<div class="pc '+cls(x)+(x.status?' st':'')+'" '+(mv?'draggable="true" ':'')+'data-i="'+x._i+'" style="border-left-color:'+color(x.gv)+'">'+
+            '<b>'+esc(x.time)+'</b> '+esc(x.name)+'<div class="small"><span class="sw" style="background:'+color(x.gv)+'"></span>'+esc(x.gv)+' · '+x.dur+'\''+(x.status?' · '+esc(x.status):'')+(x.type&&x.type!=='Official'?' · '+esc(x.type):'')+'</div></div>'; }).join('')+'</div>'; }).join('');
+    var drag=null;
+    [].forEach.call($('pBoard').querySelectorAll('.pc'),function(c){
+      c.ondragstart=function(e){ drag=S.planL[+c.dataset.i]; e.dataTransfer.setData('text/plain',c.dataset.i); c.classList.add('dragging'); };
+      c.ondragend=function(){ c.classList.remove('dragging'); };
+      c.onclick=function(){ var x=S.planL[+c.dataset.i]; if(c.getAttribute('draggable')) moveDlg(x,x.date); };
+    });
+    [].forEach.call($('pBoard').querySelectorAll('.col'),function(col){
+      if(col.classList.contains('past')) return;
+      col.ondragover=function(e){ e.preventDefault(); col.classList.add('over'); };
+      col.ondragleave=function(){ col.classList.remove('over'); };
+      col.ondrop=function(e){ e.preventDefault(); col.classList.remove('over'); if(drag) moveDlg(drag,col.dataset.d); drag=null; };
+    });
+  }).catch(fail);
+};
+function closeDlg(){ var m=document.getElementById('dlg'); if(m) m.remove(); }
+function moveDlg(x, d){
+  closeDlg();
+  var m=document.createElement('div'); m.id='dlg'; m.className='dlgbg';
+  m.innerHTML='<div class="dlg card"><b>'+esc(x.name)+'</b> <span class="small">'+esc(x.id)+'</span><p class="small">Buổi gốc: '+DAYS[thuOf(x.date)]+' '+vn(x.date)+' · '+esc(x.time)+' · '+esc(x.gv)+'</p><div class="grid2">'+
+    '<label>Ngày học mới<input id="mD" type="date" min="'+S.today+'" value="'+d+'"></label><label>Giờ<input id="mT" type="time" step="300" value="'+esc(x.time)+'"></label>'+
+    '<label>Giáo viên<select id="mG">'+gvOptions(x.gv)+'</select></label></div>'+
+    '<div style="margin:10px 0"><label class="rd"><input type="radio" name="mK" value="one" checked> Chỉ buổi này (ghi Nhật ký Zalo)</label><label class="rd"><input type="radio" name="mK" value="fix"> Từ tuần này trở đi (đổi lịch cố định)</label></div>'+
+    '<label class="small">Nội dung tin Zalo / lý do<textarea id="mX" placeholder="vd: PH xin dời sang thứ 5"></textarea></label>'+
+    '<div class="bar" style="margin-top:8px"><button class="btn g" id="mChk">Kiểm tra trùng</button><button class="btn" id="mOk">Lưu vào Sheet</button><button class="btn g" id="mNo">Hủy</button></div><div id="mMsg"></div></div>';
+  document.body.appendChild(m);
+  m.onclick=function(e){ if(e.target===m) closeDlg(); };
+  $('mNo').onclick=closeDlg;
+  var kind=function(){ return (document.querySelector('input[name=mK]:checked')||{}).value; };
+  var newLich=function(){ return call('api_course',x.id).then(function(c){
+    var nd=$('mD').value, rows=c.lcd.filter(function(r){ return !r.to || r.to>=nd; }), hit=false;
+    var NUM={CN:1,T2:2,T3:3,T4:4,T5:5,T6:6,T7:7};
+    var lich=rows.map(function(r){ var o={thu:NUM[r.thu],time:r.time,gv:r.gv,dur:r.dur||''};
+      if(!hit && o.thu===thuOf(x.date) && o.time===x.time){ hit=true; o={thu:thuOf(nd),time:$('mT').value,gv:$('mG').value,dur:o.dur}; }
+      return o; });
+    if(!hit) throw new Error('Không tìm thấy dòng lịch cố định '+DAYS[thuOf(x.date)]+' '+x.time+' của khóa này (buổi học bù / dời?) – dùng "Chỉ buổi này".');
+    return lich; }); };
+  var fromOf=function(){ var nd=$('mD').value; return nd<x.date?nd:x.date; };
+  $('mChk').onclick=function(){
+    var nd=$('mD').value; if(!nd){ msg('mMsg','Chọn ngày mới','err'); return; }
+    var p=kind()==='fix'?newLich().then(function(l){ return call('api_checkLich',l,fromOf(),x.id); })
+      :call('api_checkLich',[{thu:thuOf(nd),time:$('mT').value,gv:$('mG').value,dur:x.dur}],nd,x.id);
+    p.then(function(r){ $('mMsg').innerHTML=r.length?'<div class="msg warn">'+r.map(esc).join('<br>')+'</div>':'<div class="msg ok">✔ Không trùng, đúng giờ rảnh</div>'; }).catch(function(e){ msg('mMsg',e.message,'err'); });
+  };
+  $('mOk').onclick=function(){
+    var nd=$('mD').value, nt=$('mT').value, ng=$('mG').value, txt=$('mX').value||'Kéo-thả trên lịch';
+    if(!nd||nd<S.today){ msg('mMsg','Ngày mới phải từ hôm nay trở đi','err'); return; }
+    if(nd===x.date&&nt===x.time&&ng===x.gv){ msg('mMsg','Chưa thay đổi gì','warn'); return; }
+    $('mOk').disabled=true;
+    var p;
+    if(kind()==='fix') p=newLich().then(function(l){ return call('api_changeLich',x.id,fromOf(),l); });
+    else if(nd===x.date) p=call('api_addEvent',{type:'Đổi giờ/GV 1 buổi',id:x.id,from:nd,to:nd,newTime:nt!==x.time?nt:'',newGv:ng!==x.gv?ng:'',who:S.u,text:txt});
+    else p=call('api_addEvent',{type:'Dời buổi',id:x.id,from:x.date,to:nd,newTime:nt!==x.time?nt:'',newGv:ng!==x.gv?ng:'',who:S.u,text:txt});
+    p.then(function(){ closeDlg(); VIEWS.plan(); bell(); }).catch(function(e){ $('mOk').disabled=false; msg('mMsg',e.message,'err'); });
+  };
+}
+
+// &z=1.5 trên link: phóng to cả trang
+(function(){ var z=+new URLSearchParams(location.search).get('z'); if(z>=0.5&&z<=3) document.body.style.zoom=z; })();
+if(TOK) start(); else showLogin();
+</script>
+</body>
+</html>
