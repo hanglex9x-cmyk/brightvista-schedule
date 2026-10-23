@@ -1,462 +1,538 @@
 <!doctype html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Bright Vista — Portal</title>
-<meta name="description" content="Cổng vào hệ thống lịch học Bright Vista: ADMIN, Teacher View, CTV VIEW, sổ tay hướng dẫn và lịch minh họa.">
-<meta name="theme-color" content="#2563EB">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<title>BrightVista — Student Schedule Dashboard</title>
+<meta name="description" content="BrightVista English Center: weekly class schedule, rooms, attendance and students in one fast dashboard.">
+<meta name="theme-color" content="#1E3A8A">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Bright Vista">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BrightVista">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://cdn.tailwindcss.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com/3.4.16"></script>
-<script>
-  tailwind.config = {
-    theme: { extend: {
-      colors: { brand: { 50:'#EFF6FF', 100:'#DBEAFE', 200:'#BFDBFE', 500:'#3B82F6', 600:'#2563EB', 700:'#1D4ED8', 800:'#1E40AF' }, ink: '#0A0A0A' },
-      fontFamily: { sans: ['"Be Vietnam Pro"', 'system-ui', 'sans-serif'] }
-    } }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']},colors:{navy:'#1E3A8A',brand:'#2563EB'}}}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>/* BrightVista – lõi dùng chung cho mọi portal (nhúng vào từng file HTML khi build).
+   CSDL demo: localStorage 'brightvista_db'. Lịch tuần tính sẵn lưu đệm 5 phút: 'brightvista_cache'. */
+var BV = (function () {
+  'use strict';
+  var KEY = 'brightvista_db', CKEY = 'brightvista_cache', TTL = 300000;
+  var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+  var iso = function (d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+  var parse = function (s) { var p = String(s).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); };
+  var addD = function (d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  var monOf = function (d) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); return addD(x, -((x.getDay() + 6) % 7)); };
+  var tm = function (t) { var p = String(t || '0:0').split(':'); return +p[0] * 60 + (+p[1] || 0); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var WD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  var TYPE = { IELTS: { c: '#3B82F6', bg: 'bg-blue-50', tx: 'text-blue-700' }, TOEIC: { c: '#F59E0B', bg: 'bg-amber-50', tx: 'text-amber-700' }, Kids: { c: '#8B5CF6', bg: 'bg-violet-50', tx: 'text-violet-700' } };
+  var ROOMS = [{ id: '101', cap: 12 }, { id: '103', cap: 15 }, { id: '201', cap: 20 }, { id: '202', cap: 20 }, { id: '204', cap: 16 }, { id: '301', cap: 24 }];
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* riêng tư / đầy */ } },
+    del: function (k) { try { localStorage.removeItem(k); } catch (e) { } }
   };
+
+  /* ---------- dữ liệu mẫu ---------- */
+  function seed() {
+    var today = new Date(), w0 = monOf(today);
+    var teachers = [
+      { id: 't1', name: 'Mr. David', avatar: '#2563EB', skill: 'IELTS Speaking', email: 'david@brightvista.edu' },
+      { id: 't2', name: 'Ms. Anna', avatar: '#8B5CF6', skill: 'Kids English', email: 'anna@brightvista.edu' },
+      { id: 't3', name: 'Ms. Sarah', avatar: '#F59E0B', skill: 'TOEIC Reading', email: 'sarah@brightvista.edu' },
+      { id: 't4', name: 'Mr. James', avatar: '#0EA5E9', skill: 'TOEIC Listening', email: 'james@brightvista.edu' },
+      { id: 't5', name: 'Ms. Linh', avatar: '#10B981', skill: 'IELTS Writing & Phonics', email: 'linh@brightvista.edu' }];
+    var classes = [
+      { id: 'c1', name: 'IELTS Speaking', type: 'IELTS', level: 'B2', teacherId: 't1', room: '201', fee: 2400000 },
+      { id: 'c2', name: 'IELTS Writing', type: 'IELTS', level: 'B1', teacherId: 't5', room: '204', fee: 2400000 },
+      { id: 'c3', name: 'TOEIC Reading', type: 'TOEIC', level: '600+', teacherId: 't3', room: '202', fee: 2100000 },
+      { id: 'c4', name: 'TOEIC Listening', type: 'TOEIC', level: '450+', teacherId: 't4', room: '202', fee: 2100000 },
+      { id: 'c5', name: 'Kids Fun English', type: 'Kids', level: 'Starters', teacherId: 't2', room: '103', fee: 1600000 },
+      { id: 'c6', name: 'Kids Phonics', type: 'Kids', level: 'Pre-A1', teacherId: 't5', room: '103', fee: 1500000 }];
+    var S = [['c1', 0, '09:00', '10:30'], ['c1', 2, '09:00', '10:30'], ['c1', 4, '09:00', '10:30'], ['c1', 5, '09:00', '10:30'],
+      ['c2', 1, '18:00', '19:30'], ['c2', 3, '18:00', '19:30'], ['c2', 5, '14:00', '15:30'], ['c2', 6, '09:00', '10:30'],
+      ['c3', 0, '17:00', '18:30'], ['c3', 1, '10:45', '12:15'], ['c3', 3, '10:45', '12:15'], ['c3', 5, '10:45', '12:15'],
+      ['c4', 0, '19:00', '20:30'], ['c4', 2, '19:00', '20:30'], ['c4', 4, '18:00', '19:30'], ['c4', 6, '14:00', '15:30'],
+      ['c5', 0, '14:00', '15:00'], ['c5', 2, '16:00', '17:00'], ['c5', 3, '14:00', '15:00'], ['c5', 5, '08:00', '09:00'],
+      ['c6', 1, '16:00', '17:00'], ['c6', 2, '14:00', '15:00'], ['c6', 4, '16:00', '17:00'], ['c6', 5, '16:00', '17:00']];
+    var schedules = S.map(function (x, i) { var c = classes.filter(function (k) { return k.id === x[0]; })[0]; return { id: 'sc' + (i + 1), classId: x[0], day: x[1], time: x[2], end: x[3], room: c.room }; });
+    var N = ['Nguyễn Minh An', 'Trần Bảo Châu', 'Lê Gia Huy', 'Phạm Khánh Linh', 'Hoàng Đức Minh', 'Võ Ngọc Hân', 'Đặng Quốc Bảo', 'Bùi Thảo Vy', 'Đỗ Hải Nam', 'Ngô Phương Anh',
+      'Dương Tuấn Kiệt', 'Lý Mai Chi', 'Phan Đăng Khoa', 'Vũ Hà My', 'Trịnh Gia Bảo', 'Mai Thùy Dương', 'Hồ Minh Khôi', 'Tạ Ngọc Diệp', 'Lâm Quang Vinh', 'Cao Bảo Ngọc',
+      'Đinh Hoàng Long', 'Châu Thanh Tâm', 'Kiều Anh Thư', 'Lục Minh Đức', 'Quách Gia Hân', 'Tôn Nhật Minh', 'Âu Khánh Vy', 'Hà Thiên Ân', 'La Bảo Trâm', 'Từ Minh Quân'];
+    var PCOL = ['#2563EB', '#8B5CF6', '#F59E0B', '#0EA5E9', '#10B981', '#EC4899'];
+    var students = N.map(function (n, i) {
+      var c = classes[i % 6], last = n.split(' ')[0];
+      return { id: 'S' + pad(i + 1), name: n, level: c.level, class: c.id, avatar: PCOL[i % 6], dob: (c.type === 'Kids' ? 2016 : 2006) + (i % 4) + '-0' + (1 + i % 9) + '-1' + (i % 9),
+        parent: { name: (i % 2 ? 'Mrs. ' : 'Mr. ') + last + ' ' + ['Hùng', 'Lan', 'Dũng', 'Hoa', 'Tuấn', 'Nga'][i % 6], phone: '09' + (12345678 + i * 104729) % 100000000, email: 'parent' + (i + 1) + '@mail.com' } };
+    });
+    var attendance = [], k = 0;
+    for (var back = 21; back >= 1 && attendance.length < 100; back--) {
+      var d = addD(today, -back), wd = (d.getDay() + 6) % 7;
+      schedules.filter(function (s) { return s.day === wd; }).forEach(function (s) {
+        students.filter(function (st) { return st.class === s.classId; }).forEach(function (st) {
+          if (attendance.length >= 100) return;
+          k++; var st2 = k % 13 === 0 ? 'Absent' : k % 7 === 0 ? 'Late' : 'Present';
+          attendance.push({ id: 'a' + k, studentId: st.id, scheduleId: s.id, classId: s.classId, date: iso(d), status: st2, note: st2 === 'Late' ? 'Late 10 min' : st2 === 'Absent' ? 'Sick' : '' });
+        });
+      });
+    }
+    var m = iso(today).slice(0, 7), pm = iso(addD(new Date(today.getFullYear(), today.getMonth(), 1), -1)).slice(0, 7);
+    var payments = [];
+    students.forEach(function (st, i) {
+      var c = classes.filter(function (x) { return x.id === st.class; })[0];
+      payments.push({ id: 'p' + (i * 2 + 1), studentId: st.id, month: pm, amount: c.fee, status: i % 10 === 3 ? 'Overdue' : 'Paid', paidAt: i % 10 === 3 ? '' : pm + '-0' + (2 + i % 7) });
+      payments.push({ id: 'p' + (i * 2 + 2), studentId: st.id, month: m, amount: c.fee, status: i % 4 === 0 ? 'Unpaid' : i % 10 === 3 ? 'Overdue' : 'Paid', paidAt: i % 4 === 0 || i % 10 === 3 ? '' : m + '-0' + (1 + i % 5) });
+    });
+    var comments = students.slice(0, 18).map(function (st, i) {
+      var c = classes.filter(function (x) { return x.id === st.class; })[0];
+      return { id: 'cm' + i, studentId: st.id, teacherId: c.teacherId, date: iso(addD(today, -(i % 10) - 1)),
+        text: ['Great pronunciation progress this week.', 'Needs more vocabulary practice at home.', 'Very active in speaking activities.', 'Homework done carefully, keep it up!', 'Please review grammar unit 4.', 'Confident presentation today.'][i % 6] };
+    });
+    var homework = classes.map(function (c, i) { return { id: 'h' + i, classId: c.id, title: ['Speaking part 2: describe a place', 'Task 2 essay: technology', 'Reading test 3 (Part 7)', 'Listening Part 3 practice', 'Unit 5 song + flashcards', 'Phonics worksheet: sh / ch'][i], due: iso(addD(today, 2 + i % 3)) }; });
+    return { v: 1, created: iso(today), students: students, teachers: teachers, classes: classes, schedules: schedules, attendance: attendance, payments: payments, comments: comments, homework: homework };
+  }
+  var DB = null;
+  function db() { if (!DB) { DB = store.get(KEY, null); if (!DB || DB.v !== 1) { DB = seed(); save(); } } return DB; }
+  function save() { store.set(KEY, DB); store.del(CKEY); }
+  function reset() { store.del(KEY); store.del(CKEY); DB = null; return db(); }
+  function by(list, id) { for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
+  function uid(p) { return p + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36); }
+
+  /* ---------- buổi học theo ngày (lịch tuần lặp lại), lưu đệm 5 phút ---------- */
+  function sessions(from, to) {
+    var key = iso(from) + '_' + iso(to), c = store.get(CKEY, null);
+    if (c && c.key === key && Date.now() - c.t < TTL) return c.data;
+    var D = db(), out = [];
+    for (var d = new Date(from); d <= to; d = addD(d, 1)) {
+      var wd = (d.getDay() + 6) % 7, ds = iso(d);
+      D.schedules.forEach(function (s) {
+        if (s.day !== wd || (s.date && s.date !== ds)) return;
+        var cl = by(D.classes, s.classId); if (!cl) return;
+        out.push({ id: s.id + '|' + ds, scheduleId: s.id, classId: cl.id, date: ds, time: s.time, end: s.end, room: s.room || cl.room, name: cl.name, type: cl.type, level: cl.level, teacherId: cl.teacherId });
+      });
+    }
+    out.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : tm(a.time) - tm(b.time); });
+    store.set(CKEY, { key: key, t: Date.now(), data: out });
+    return out;
+  }
+  function roster(classId) { return db().students.filter(function (s) { return s.class === classId; }); }
+  function attOf(sessionDate, classId) { return db().attendance.filter(function (a) { return a.date === sessionDate && a.classId === classId; }); }
+  function presentCount(se) { var A = attOf(se.date, se.classId); return { p: A.filter(function (a) { return a.status === 'Present'; }).length, l: A.filter(function (a) { return a.status === 'Late'; }).length, a: A.filter(function (a) { return a.status === 'Absent'; }).length, n: roster(se.classId).length, done: A.length > 0 }; }
+  function setAttendance(se, map, notes) {
+    var D = db();
+    D.attendance = D.attendance.filter(function (a) { return !(a.date === se.date && a.classId === se.classId); });
+    Object.keys(map).forEach(function (sid) { D.attendance.push({ id: uid('a'), studentId: sid, scheduleId: se.scheduleId, classId: se.classId, date: se.date, status: map[sid], note: (notes && notes[sid]) || '' }); });
+    save();
+  }
+  function rateOf(list) { if (!list.length) return 0; return Math.round(list.filter(function (a) { return a.status !== 'Absent'; }).length / list.length * 100); }
+
+  /* ---------- giao diện ---------- */
+  var IC = {
+    dash: '<path d="M3 13h8V3H3zm10 8h8V11h-8zM3 21h8v-6H3zm10-18v6h8V3z"/>',
+    stu: '<path d="M12 3 2 8l10 5 10-5-10-5Zm-6 7.5V15c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5"/>',
+    cls: '<path d="M4 5h16v11H4zM8 20h8M12 16v4"/>',
+    cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+    tea: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    room: '<path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16M2 21h20M14 12h.01"/>',
+    att: '<path d="m9 12 2 2 4-4"/><rect x="3" y="4" width="18" height="17" rx="2"/>',
+    pay: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+    rep: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    hw: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M8 7h8M8 11h6"/>',
+    home: '<path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>', dl: '<path d="M12 3v12m0 0-4-4m4 4 4-4M4 21h16"/>', edit: '<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>', del: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>'
+  };
+  var svg = function (k, c) { return '<svg class="' + (c || 'w-5 h-5') + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">' + (IC[k] || '') + '</svg>'; };
+  var ini = function (n) { return String(n).replace(/^(Mr\.|Ms\.|Mrs\.)\s*/, '').split(' ').filter(Boolean).map(function (w) { return w[0]; }).join('').slice(-2).toUpperCase(); };
+  var avatar = function (name, color, size) { return '<span class="grid place-items-center shrink-0 rounded-full text-white font-bold ' + (size || 'w-9 h-9 text-xs') + '" style="background:' + (color || '#2563EB') + '">' + esc(ini(name)) + '</span>'; };
+  var weekLabel = function (w) { var e = addD(w, 6); return MON[w.getMonth()] + ' ' + w.getDate() + '–' + (e.getMonth() !== w.getMonth() ? MON[e.getMonth()] + ' ' + e.getDate() : e.getDate()) + ', ' + e.getFullYear(); };
+  var money = function (n) { return (+n || 0).toLocaleString('vi-VN') + ' ₫'; };
+  var $ = function (id) { return document.getElementById(id); };
+
+  /** Khung trang: sidebar navy 260px (PC), thanh trên có link các portal, bottom nav 5 mục (mobile). */
+  function layout(o) {
+    // o = {base:'../', portal:'admin', title, sub, nav:[[id,label,icon]], bnav:[[id,label,icon]], userName, userSub, picker:'html'}
+    var P = [['portal.html', 'Dashboard'], ['admin/', 'Admin'], ['teacher/', 'Teacher'], ['student/', 'Student'], ['parent/', 'Parent']];
+    document.body.insertAdjacentHTML('afterbegin',
+      '<aside class="hidden lg:flex fixed inset-y-0 left-0 w-[260px] flex-col bg-[#1E3A8A] text-white z-40">' +
+      '<a href="' + o.base + 'portal.html" class="flex items-center gap-3 px-6 pt-7 pb-6"><span class="grid place-items-center w-11 h-11 rounded-xl bg-white/15 text-2xl">🎓</span><span><b class="block text-xl tracking-tight">BrightVista</b><span class="text-sm text-blue-200">' + esc(o.brandSub || 'English Center') + '</span></span></a>' +
+      '<nav id="bvSide" class="flex-1 px-4 space-y-1 overflow-y-auto" aria-label="Main"></nav>' +
+      '<div class="m-4 p-3 rounded-xl bg-white/10 flex items-center gap-3"><span id="bvAva">' + avatar(o.userName || 'Admin', '#60A5FA', 'w-10 h-10 text-sm') + '</span><div class="min-w-0"><p id="bvUser" class="font-semibold text-sm truncate">' + esc(o.userName || '') + '</p><p id="bvUserSub" class="text-xs text-blue-200 truncate">' + esc(o.userSub || '') + '</p></div></div></aside>' +
+      '<div class="lg:ml-[260px] min-h-screen pb-24 lg:pb-10">' +
+      '<header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-100"><div class="flex items-center gap-3 px-4 lg:px-8 h-14">' +
+      '<a href="' + o.base + 'portal.html" class="lg:hidden grid place-items-center w-9 h-9 rounded-lg bg-[#1E3A8A] text-lg">🎓</a>' +
+      '<div class="min-w-0 flex-1"><h1 id="bvTitle" class="font-extrabold text-slate-900 truncate"></h1></div>' + (o.picker || '') +
+      '<nav class="hidden md:flex items-center gap-1 text-sm" aria-label="Portals">' + P.map(function (p) { var on = p[1].toLowerCase() === o.portal; return '<a href="' + o.base + p[0] + '" class="px-2.5 py-1.5 rounded-lg font-semibold ' + (on ? 'bg-blue-50 text-[#2563EB]' : 'text-slate-500 hover:text-slate-900') + '">' + p[1] + '</a>'; }).join('<span class="text-slate-300">|</span>') + '</nav>' +
+      '<details class="md:hidden relative"><summary class="list-none grid place-items-center w-9 h-9 rounded-lg border border-slate-200 text-slate-600" aria-label="Switch portal">⇄</summary><div class="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl border border-slate-100 p-1">' +
+      P.map(function (p) { return '<a href="' + o.base + p[0] + '" class="block px-3 py-2 rounded-lg text-sm font-semibold ' + (p[1].toLowerCase() === o.portal ? 'text-[#2563EB] bg-blue-50' : 'text-slate-700') + '">' + p[1] + '</a>'; }).join('') + '</div></details>' +
+      '</div></header><main id="bvMain" class="px-4 lg:px-8 pt-5 lg:pt-8"><p id="bvSub" class="hidden lg:block text-slate-500 -mt-3 mb-6"></p><div id="bvView"></div></main></div>' +
+      '<nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200" style="padding-bottom:env(safe-area-inset-bottom,0px)" aria-label="Bottom"><div id="bvBottom" class="grid grid-cols-' + o.bnav.length + '"></div></nav>' +
+      '<div id="bvModal" class="fixed inset-0 z-50 bg-slate-900/50 grid place-items-end sm:place-items-center" hidden role="dialog" aria-modal="true"></div>' +
+      '<div id="bvToast" class="fixed z-[60] left-1/2 -translate-x-1/2 bottom-24 lg:bottom-8 px-4 py-3 rounded-xl bg-slate-900 text-white text-sm font-semibold shadow-xl" hidden role="status"></div>');
+    var cur = null, render = o.render;
+    function nav() {
+      $('bvSide').innerHTML = o.nav.map(function (n) { var on = n[0] === cur; return '<a href="#' + n[0] + '" class="flex items-center gap-3 px-4 h-11 rounded-lg font-medium ' + (on ? 'bg-[#2563EB] text-white shadow' : 'text-blue-100 hover:bg-white/10') + '"' + (on ? ' aria-current="page"' : '') + '>' + svg(n[2]) + esc(n[1]) + '</a>'; }).join('');
+      $('bvBottom').innerHTML = o.bnav.map(function (n) { var on = n[0] === cur; return '<a href="#' + n[0] + '" class="flex flex-col items-center justify-center gap-1 h-16 text-[11px] font-semibold ' + (on ? 'text-[#2563EB]' : 'text-slate-400') + '"' + (on ? ' aria-current="page"' : '') + '>' + svg(n[2], 'w-6 h-6') + esc(n[1]) + '</a>'; }).join('');
+      var it = o.nav.filter(function (n) { return n[0] === cur; })[0] || o.bnav.filter(function (n) { return n[0] === cur; })[0];
+      $('bvTitle').textContent = (it ? it[1] : '') + (o.titleSuffix ? ' · ' + o.titleSuffix : '');
+      $('bvSub').textContent = (o.subs && o.subs[cur]) || '';
+    }
+    function route() {
+      var id = (location.hash || '#' + o.nav[0][0]).slice(1);
+      if (!o.nav.some(function (n) { return n[0] === id; }) && !o.bnav.some(function (n) { return n[0] === id; })) id = o.nav[0][0];
+      var changed = id !== cur; cur = id; nav();
+      $('bvView').innerHTML = '<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">' + skeleton(4, 'h-24') + '</div><div class="mt-4 space-y-3">' + skeleton(3, 'h-16') + '</div>';
+      var v = $('bvView'); requestAnimationFrame(function () { render(cur, v); v.classList.remove('fade'); void v.offsetWidth; v.classList.add('fade'); });
+      if (changed) window.scrollTo(0, 0);
+    }
+    window.addEventListener('hashchange', route);
+    document.addEventListener('click', function (e) { var t = e.target; if (t === $('bvModal') || (t.closest && t.closest('[data-close]'))) closeModal(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+    return { route: route, refresh: function () { render(cur, $('bvView')); }, current: function () { return cur; }, setUser: function (n, s, col) { $('bvUser').textContent = n; $('bvUserSub').textContent = s; $('bvAva').innerHTML = avatar(n, col || '#60A5FA', 'w-10 h-10 text-sm'); } };
+  }
+  function skeleton(n, h) { var s = ''; for (var i = 0; i < n; i++) s += '<div class="animate-pulse rounded-2xl bg-slate-200/70 ' + (h || 'h-20') + '"></div>'; return s; }
+  function modal(title, body, onSubmit) {
+    var m = $('bvModal');
+    m.innerHTML = '<form class="w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto fade"><div class="flex items-center justify-between"><h2 class="text-lg font-bold">' + esc(title) + '</h2><button type="button" data-close class="grid place-items-center w-9 h-9 rounded-lg hover:bg-slate-100" aria-label="Close">✕</button></div>' +
+      '<div class="mt-4">' + body + '</div><p class="bv-msg text-sm mt-3"></p><div class="flex gap-3 mt-4"><button type="button" data-close class="flex-1 h-11 rounded-xl border border-slate-200 font-semibold">Cancel</button><button class="flex-1 h-11 rounded-xl bg-[#2563EB] text-white font-semibold hover:bg-blue-700">Save</button></div></form>';
+    m.hidden = false;
+    var f = m.querySelector('form'), first = f.querySelector('input,select,textarea'); if (first) setTimeout(function () { first.focus(); }, 30);
+    f.addEventListener('submit', function (e) { e.preventDefault(); var err = onSubmit(f); if (err) f.querySelector('.bv-msg').innerHTML = '<span class="text-red-600 font-semibold">' + esc(err) + '</span>'; else closeModal(); });
+  }
+  function closeModal() { var m = $('bvModal'); if (m) { m.hidden = true; m.innerHTML = ''; } }
+  var tt = null;
+  function toast(msg) { var t = $('bvToast'); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(function () { t.hidden = true; }, 2200); }
+  function csv(rows, name) {
+    var s = '﻿' + rows.map(function (r) { return r.map(function (v) { v = String(v == null ? '' : v); return /[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); }).join('\r\n');
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([s], { type: 'text/csv;charset=utf-8' })); a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  var field = function (label, html, span) { return '<label class="block text-sm font-medium ' + (span || '') + '">' + label + html + '</label>'; };
+  var inp = function (name, val, extra) { return '<input name="' + name + '" value="' + esc(val == null ? '' : val) + '" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3" ' + (extra || '') + '>'; };
+  var sel = function (name, opts, val) { return '<select name="' + name + '" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3 bg-white">' + opts.map(function (o) { o = [].concat(o); return '<option value="' + esc(o[0]) + '"' + (String(o[0]) === String(val) ? ' selected' : '') + '>' + esc(o[1] == null ? o[0] : o[1]) + '</option>'; }).join('') + '</select>'; };
+  var card = function (inner, extra) { return '<div class="bg-white rounded-2xl border border-slate-100 shadow-sm ' + (extra || 'p-4 lg:p-6') + '">' + inner + '</div>'; };
+  var stat = function (t, v, sub, blue, icon) {
+    return '<div class="rounded-2xl p-4 lg:p-5 ' + (blue ? 'bg-[#2563EB] text-white shadow-lg shadow-blue-200' : 'bg-white border border-slate-100 shadow-sm') + '"><div class="flex items-center justify-between"><p class="text-xs lg:text-sm font-medium ' + (blue ? 'text-blue-100' : 'text-slate-500') + '">' + t + '</p><span class="grid place-items-center w-9 h-9 rounded-xl ' + (blue ? 'bg-white/20' : 'bg-blue-50 text-[#2563EB]') + '">' + svg(icon || 'dash') + '</span></div>' +
+      '<p class="text-2xl lg:text-3xl font-extrabold mt-2">' + v + '</p><p class="text-xs mt-1 ' + (blue ? 'text-blue-100' : 'text-emerald-600 font-semibold') + '">' + sub + '</p></div>';
+  };
+  /** Thẻ buổi học (lịch tuần). */
+  function chip(s) {
+    var D = db(), t = by(D.teachers, s.teacherId) || { name: '—', avatar: '#64748B' }, T = TYPE[s.type] || TYPE.IELTS, pc = presentCount(s);
+    return '<div class="rounded-xl p-3 border-l-4 ' + T.bg + '" style="border-color:' + T.c + '"><p class="font-semibold text-sm text-slate-900 leading-tight">' + esc(s.name) + '</p>' +
+      '<p class="text-[11px] text-slate-500 mt-1">' + s.time + '–' + s.end + ' · Room ' + esc(s.room) + '</p><p class="text-[11px] text-slate-500">Level ' + esc(s.level) + '</p>' +
+      '<div class="flex items-center justify-between mt-2 gap-1"><span class="flex items-center gap-1 min-w-0">' + avatar(t.name, t.avatar, 'w-6 h-6 text-[10px]') + '<span class="text-[11px] truncate">' + esc(t.name) + '</span></span>' +
+      (pc.done ? '<span class="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700">Present ' + (pc.p + pc.l) + '/' + pc.n + '</span>' : '') + '</div></div>';
+  }
+  /** Lịch tuần 7 cột (PC) / 1 cột (mobile). */
+  function weekGrid(list, w0) {
+    var h = '<div class="grid grid-cols-1 lg:grid-cols-7 gap-3">', today = iso(new Date());
+    for (var i = 0; i < 7; i++) {
+      var d = addD(w0, i), ds = iso(d), L = list.filter(function (s) { return s.date === ds; });
+      h += '<div class="min-w-0"><div class="text-center py-2 rounded-xl mb-2 ' + (ds === today ? 'bg-[#2563EB] text-white' : 'bg-slate-50 text-slate-600') + '"><p class="text-xs font-semibold">' + WD[i] + '</p><p class="text-lg font-bold">' + d.getDate() + '</p></div><div class="space-y-2">' +
+        (L.length ? L.map(chip).join('') : '<p class="text-xs text-center text-slate-300 py-3">No class</p>') + '</div></div>';
+    }
+    return h + '</div>';
+  }
+  function sw(base) { if ('serviceWorker' in navigator && location.protocol === 'https:') window.addEventListener('load', function () { navigator.serviceWorker.register(base + 'sw.js', { scope: base }).catch(function () { }); }); }
+
+  return { db: db, save: save, reset: reset, by: by, uid: uid, sessions: sessions, roster: roster, attOf: attOf, presentCount: presentCount, setAttendance: setAttendance, rateOf: rateOf,
+    iso: iso, parse: parse, addD: addD, monOf: monOf, tm: tm, esc: esc, MON: MON, WD: WD, TYPE: TYPE, ROOMS: ROOMS, store: store,
+    svg: svg, avatar: avatar, ini: ini, weekLabel: weekLabel, money: money, $: $, layout: layout, skeleton: skeleton, modal: modal, closeModal: closeModal, toast: toast, csv: csv,
+    field: field, inp: inp, sel: sel, card: card, stat: stat, chip: chip, weekGrid: weekGrid, sw: sw };
+})();
 </script>
 <style>
-  html { -webkit-text-size-adjust: 100%; }
-  body { background: #F5F7FB; }
-  .safe-b { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
-  @media (min-width: 1024px) { .safe-b { padding-bottom: 32px; } }
-  .bnav { padding-bottom: env(safe-area-inset-bottom, 0px); }
-  [hidden] { display: none !important; }
-  .view { animation: fade .25s ease; }
-  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) { .view { animation: none; } }
-  .lesson { border-left-width: 4px; }
-  .chip-on { background: #2563EB; color: #fff; border-color: #2563EB; }
-  .nav-on { background: rgba(37, 99, 235, .18); color: #fff; }
-  .nav-on .nav-ic { color: #60A5FA; }
-  .bnav-on { color: #2563EB; }
-  .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  :focus-visible { outline: 2px solid #2563EB; outline-offset: 2px; }
+  body{background:#F8FAFC}
+  [hidden]{display:none!important}
+  .no-sb{scrollbar-width:none}.no-sb::-webkit-scrollbar{display:none}
+  .pb-nav{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  @media(min-width:1024px){.pb-nav{padding-bottom:32px}}
+  .bnav{padding-bottom:env(safe-area-inset-bottom,0px)}
+  .fade{animation:fd .2s ease}@keyframes fd{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.fade{animation:none}}
+  :focus-visible{outline:2px solid #2563EB;outline-offset:2px}
 </style>
 </head>
 <body class="font-sans text-slate-800 antialiased">
 
-<!-- ===== Sidebar (PC) ===== -->
-<aside class="hidden lg:flex fixed inset-y-0 left-0 w-[260px] flex-col bg-[#0A0A0A] text-slate-300 z-40">
-  <a href="#home" class="flex items-center gap-3 px-6 h-20 border-b border-white/10">
-    <span class="grid place-items-center w-10 h-10 rounded-xl bg-brand-600 text-white font-extrabold">BV</span>
-    <span class="leading-tight"><b class="block text-white text-lg">Bright Vista</b><span class="text-xs text-slate-400">English Online 1-1</span></span>
-  </a>
-  <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1" id="sideNav" aria-label="Điều hướng chính"></nav>
-  <div class="px-3 pb-4 space-y-1 border-t border-white/10 pt-4">
-    <p class="px-3 text-[11px] uppercase tracking-wider text-slate-500 mb-1">Vào hệ thống</p>
-    <a href="admin/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5"><span class="text-brand-500">●</span> ADMIN</a>
-    <a href="teacher/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5"><span class="text-sky-400">●</span> Teacher View</a>
-    <a href="ctv/" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5"><span class="text-violet-400">●</span> CTV VIEW</a>
-    <button type="button" data-install hidden class="w-full mt-2 px-3 py-2 rounded-lg bg-brand-600 text-white font-semibold hover:bg-brand-700">⬇ Cài app lên máy</button>
+<!-- ================= SIDEBAR (PC) ================= -->
+<aside class="hidden lg:flex fixed inset-y-0 left-0 w-[260px] flex-col bg-[#1E3A8A] text-white z-40">
+  <div class="px-6 pt-7 pb-6">
+    <div class="flex items-center gap-3">
+      <span class="grid place-items-center w-11 h-11 rounded-xl bg-white/15 text-2xl">🎓</span>
+      <div><p class="text-xl font-extrabold tracking-tight">BrightVista</p><p class="text-sm text-blue-200">English Center</p></div>
+    </div>
+  </div>
+  <nav id="sideNav" class="flex-1 px-4 space-y-1 overflow-y-auto no-sb" aria-label="Main"></nav>
+  <div class="m-4 p-3 rounded-xl bg-white/10 flex items-center gap-3">
+    <span class="grid place-items-center w-10 h-10 rounded-full bg-blue-400 font-bold">MA</span>
+    <div class="min-w-0"><p class="font-semibold text-sm truncate">Admin Minh Anh</p><p class="text-xs text-blue-200 truncate">minhanh@brightvista.edu</p></div>
   </div>
 </aside>
 
-<!-- ===== Header (mobile) ===== -->
-<header class="lg:hidden sticky top-0 z-30 bg-[#0A0A0A] text-white">
-  <div class="flex items-center justify-between h-14 px-4">
-    <a href="#home" class="flex items-center gap-2"><span class="grid place-items-center w-8 h-8 rounded-lg bg-brand-600 font-extrabold text-sm">BV</span><b>Bright Vista</b></a>
-    <span id="mTitle" class="text-sm text-slate-300"></span>
-  </div>
-</header>
+<!-- ================= MAIN ================= -->
+<main class="lg:ml-[260px] min-h-screen pb-nav">
 
-<!-- ===== Main ===== -->
-<main class="lg:ml-[260px] min-h-screen safe-b">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 lg:pt-8">
-    <div id="demoBar" class="mb-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 text-sm px-4 py-3">
-      ⚠️ <b>Dữ liệu mẫu</b> để minh họa – không phải học viên / giáo viên thật. Lịch thật của trung tâm chỉ xem trong Web App (ADMIN / Teacher View / CTV VIEW, cần đăng nhập Google).
-      Thay đổi ở trang này (đổi GV, đặt phòng) chỉ lưu trên máy của bạn.
+  <!-- Top bar (PC) -->
+  <div class="hidden lg:flex items-center justify-end gap-2 px-8 pt-4 text-sm"><select data-role class="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold" aria-label="Switch role"><option value="">View as…</option><option value="admin/">Admin</option><option value="teacher/">Teacher</option><option value="student/">Student</option><option value="parent/">Parent</option></select><nav class="flex items-center gap-1" aria-label="Portals"><a href="portal.html" class="px-2.5 py-1.5 rounded-lg font-semibold bg-blue-50 text-[#2563EB]">Dashboard</a><a href="admin/" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-500 hover:text-slate-900">Admin</a><a href="teacher/" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-500 hover:text-slate-900">Teacher</a><a href="student/" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-500 hover:text-slate-900">Student</a><a href="parent/" class="px-2.5 py-1.5 rounded-lg font-semibold text-slate-500 hover:text-slate-900">Parent</a></nav></div>
+  <header class="hidden lg:flex items-center justify-between gap-6 px-8 pt-4">
+    <div><h1 id="pageTitle" class="text-2xl font-extrabold text-slate-900">Student Schedule Dashboard</h1>
+      <p id="pageSub" class="text-slate-500 mt-1">Manage weekly classes, rooms and attendance in one place.</p></div>
+    <div class="flex items-center gap-3">
+      <label class="relative"><span class="sr-only">Search</span>
+        <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Search students, classes..." class="w-72 h-11 pl-10 pr-3 rounded-xl border border-slate-200 bg-white focus:border-brand outline-none"></label>
+      <button type="button" class="relative grid place-items-center w-11 h-11 rounded-xl border border-slate-200 bg-white" aria-label="Notifications">
+        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0a3 3 0 1 1-6 0"/></svg>
+        <span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500"></span></button>
+      <button type="button" data-new class="h-11 px-5 rounded-xl bg-[#2563EB] text-white font-semibold hover:bg-blue-700 flex items-center gap-2"><span class="text-lg leading-none">＋</span> New Booking</button>
     </div>
+  </header>
 
-    <!-- HOME -->
-    <section id="v-home" class="view" hidden>
-      <div class="rounded-2xl bg-gradient-to-br from-brand-700 to-brand-500 text-white p-6 sm:p-8 shadow-lg">
-        <p class="text-brand-100 text-sm font-semibold">Hệ thống vận hành nội bộ</p>
-        <h1 class="text-2xl sm:text-4xl font-extrabold mt-1">Lịch dạy Anh ngữ online 1-1</h1>
-        <p class="mt-3 text-brand-50 max-w-2xl">Một cổng vào cho Admin, Giáo viên và Cộng tác viên: xếp lịch, nhận tin Zalo, học thử, chấm công, lịch chi tiết học viên và slot lương.</p>
-        <div class="mt-5 flex flex-wrap gap-3">
-          <a href="#schedule" class="px-4 py-3 rounded-xl bg-white text-brand-700 font-bold">📅 Xem lịch tuần</a>
-          <button type="button" data-install hidden class="px-4 py-3 rounded-xl bg-white/15 border border-white/30 font-semibold">⬇ Cài app lên điện thoại</button>
+  <!-- Header (mobile) -->
+  <header class="lg:hidden sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-100 px-4 pt-3 pb-3">
+    <div class="flex items-center justify-between">
+      <h1 id="mTitle" class="text-xl font-extrabold flex items-center gap-2">Schedule <span aria-hidden="true">📅</span></h1>
+      <span class="flex items-center gap-2"><select data-role class="h-10 w-28 rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold" aria-label="Switch role"><option value="">View as…</option><option value="admin/">Admin</option><option value="teacher/">Teacher</option><option value="student/">Student</option><option value="parent/">Parent</option></select><button type="button" data-new class="h-10 px-3 rounded-xl bg-[#2563EB] text-white text-sm font-semibold">＋ Book</button></span>
+    </div>
+    <select id="mWeek" class="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium" aria-label="Week"></select>
+  </header>
+
+  <div class="px-4 lg:px-8 pt-4 lg:pt-6">
+
+    <!-- ===== DASHBOARD ===== -->
+    <section id="v-dashboard" class="fade">
+      <!-- stats -->
+      <div id="stats" class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5"></div>
+
+      <!-- mobile: date pills + today -->
+      <div class="lg:hidden mt-5">
+        <div id="pills" class="flex gap-2 overflow-x-auto no-sb -mx-4 px-4 pb-1"></div>
+        <h2 id="todayTitle" class="mt-5 mb-3 font-bold text-slate-900"></h2>
+        <div id="todayList" class="space-y-3"></div>
+        <div class="mt-6 bg-white rounded-2xl border border-slate-100 p-4">
+          <h2 class="font-bold text-slate-900">Attendance</h2>
+          <div id="attPills" class="mt-3 flex flex-wrap gap-2"></div>
         </div>
       </div>
 
-      <div id="stats" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5"></div>
-
-      <h2 class="text-lg font-bold mt-8 mb-3">Bạn là ai? Vào đúng cổng của mình</h2>
-      <div class="grid gap-4 md:grid-cols-3">
-        <article class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col">
-          <span class="text-2xl">🛠️</span><h3 class="font-bold text-lg mt-2">ADMIN</h3>
-          <p class="text-sm text-slate-600 mt-1 flex-1">Chị Nhung, chị Lương, chủ trung tâm: đủ 12 tab – nhập lịch, nhật ký Zalo, học thử, kiểm tra tuần, chấm công, lịch chi tiết HV, slot lương, bảo lưu.</p>
-          <a href="admin/" class="mt-4 text-center px-4 py-3 rounded-xl bg-brand-600 text-white font-semibold hover:bg-brand-700">Mở ADMIN (nhập mã) →</a>
-          <p class="text-xs text-slate-500 mt-2">🔒 Trang này không chứa mã admin. Không gửi link có mã cho GV / CTV.</p>
-        </article>
-        <article class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col">
-          <span class="text-2xl">👩‍🏫</span><h3 class="font-bold text-lg mt-2">Teacher View</h3>
-          <p class="text-sm text-slate-600 mt-1 flex-1">Teachers (PH / VN): view-only <b>Schedule</b> and <b>My slots</b>. Wait 5–10 seconds for the page to load.</p>
-          <a href="teacher/" class="mt-4 text-center px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold hover:bg-black">Open Teacher View →</a>
-        </article>
-        <article class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col">
-          <span class="text-2xl">🤝</span><h3 class="font-bold text-lg mt-2">CTV VIEW</h3>
-          <p class="text-sm text-slate-600 mt-1 flex-1">Cộng tác viên, chỉ xem: Lịch hàng ngày, Lưới theo ngày, Lịch học viên tổng hợp, Lịch chi tiết HV (gửi phụ huynh). Không thấy lương / đơn giá.</p>
-          <a href="ctv/" class="mt-4 text-center px-4 py-3 rounded-xl bg-slate-900 text-white font-semibold hover:bg-black">Mở CTV VIEW →</a>
-        </article>
-      </div>
-
-      <div class="grid gap-4 md:grid-cols-2 mt-4">
-        <a href="admin.html" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:border-brand-200 flex gap-4 items-center"><span class="text-3xl">📘</span><span><b class="block">Sổ tay Admin</b><span class="text-sm text-slate-600">Tiếng Việt, từng tab, có ảnh chỉ dẫn</span></span></a>
-        <a href="./" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:border-brand-200 flex gap-4 items-center"><span class="text-3xl">📗</span><span><b class="block">Teacher Guide</b><span class="text-sm text-slate-600">English, short and practical</span></span></a>
-      </div>
-
-      <h2 class="text-lg font-bold mt-8 mb-3">Bảng màu buổi học</h2>
-      <div id="legend" class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"></div>
-
-      <h2 class="text-lg font-bold mt-8 mb-3">Câu hỏi thường gặp</h2>
-      <div class="space-y-2" id="faq"></div>
-    </section>
-
-    <!-- SCHEDULE -->
-    <section id="v-schedule" class="view" hidden>
-      <div class="flex flex-wrap items-end justify-between gap-3">
-        <div><h1 class="text-2xl font-extrabold">Lịch tuần</h1><p class="text-sm text-slate-500" id="weekLabel"></p></div>
-        <div class="flex items-center gap-2">
-          <button type="button" id="wPrev" class="w-11 h-11 rounded-xl bg-white border border-slate-200 font-bold" aria-label="Tuần trước">◀</button>
-          <button type="button" id="wToday" class="h-11 px-4 rounded-xl bg-white border border-slate-200 font-semibold">Tuần này</button>
-          <button type="button" id="wNext" class="w-11 h-11 rounded-xl bg-white border border-slate-200 font-bold" aria-label="Tuần sau">▶</button>
+      <!-- PC: weekly calendar -->
+      <div class="hidden lg:block mt-8 bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <button type="button" data-wk="-1" class="grid place-items-center w-9 h-9 rounded-lg border border-slate-200 hover:bg-slate-50" aria-label="Previous week">‹</button>
+            <h2 id="weekTitle" class="text-lg font-bold text-slate-900"></h2>
+            <button type="button" data-wk="1" class="grid place-items-center w-9 h-9 rounded-lg border border-slate-200 hover:bg-slate-50" aria-label="Next week">›</button>
+          </div>
+          <div class="flex p-1 rounded-xl bg-slate-100" role="tablist">
+            <button type="button" data-mode="week" class="px-4 h-9 rounded-lg text-sm font-semibold">Week</button>
+            <button type="button" data-mode="month" class="px-4 h-9 rounded-lg text-sm font-semibold">Month</button>
+            <button type="button" data-mode="list" class="px-4 h-9 rounded-lg text-sm font-semibold">List</button>
+          </div>
         </div>
-      </div>
-      <div class="mt-4 flex flex-col sm:flex-row gap-2">
-        <select id="sTeacher" class="h-11 rounded-xl border border-slate-200 bg-white px-3 sm:w-56" aria-label="Lọc giáo viên"></select>
-        <input id="sSearch" type="search" placeholder="Tìm học viên / mã…" class="h-11 rounded-xl border border-slate-200 bg-white px-3 flex-1" aria-label="Tìm học viên">
-      </div>
-      <!-- mobile: chọn ngày -->
-      <div id="dayChips" class="lg:hidden mt-4 flex gap-2 scroll-x pb-1"></div>
-      <div id="dayList" class="lg:hidden mt-3 space-y-2"></div>
-      <!-- PC: 6 cột -->
-      <div id="weekGrid" class="hidden lg:grid grid-cols-6 gap-3 mt-5"></div>
-    </section>
-
-    <!-- CLASSES -->
-    <section id="v-classes" class="view" hidden>
-      <h1 class="text-2xl font-extrabold">Danh sách lớp</h1>
-      <p class="text-sm text-slate-500">Mỗi lớp là 1 học viên học 1-1 với 1 giáo viên. Thanh tiến độ = số buổi đã học / tổng buổi.</p>
-      <div class="mt-4 flex flex-col sm:flex-row gap-2">
-        <input id="cSearch" type="search" placeholder="Tìm học viên / mã / level…" class="h-11 rounded-xl border border-slate-200 bg-white px-3 flex-1" aria-label="Tìm lớp">
-        <select id="cLop" class="h-11 rounded-xl border border-slate-200 bg-white px-3 sm:w-44" aria-label="Lọc lớp"><option value="">Mọi lớp</option><option>ESL</option><option>PRE-IELTS</option><option>IELTS</option></select>
-        <select id="cTeacher" class="h-11 rounded-xl border border-slate-200 bg-white px-3 sm:w-52" aria-label="Lọc giáo viên"></select>
-      </div>
-      <p id="cCount" class="text-sm text-slate-500 mt-3"></p>
-      <div id="classList" class="grid gap-3 md:grid-cols-2 xl:grid-cols-3 mt-2"></div>
-    </section>
-
-    <!-- TEACHERS -->
-    <section id="v-teachers" class="view" hidden>
-      <h1 class="text-2xl font-extrabold">Phân công giáo viên</h1>
-      <p class="text-sm text-slate-500">Đổi giáo viên cho từng lớp – hệ thống báo ngay nếu giáo viên mới bị trùng giờ. Thay đổi lưu trên máy này.</p>
-      <div id="teacherCards" class="grid gap-3 grid-cols-2 md:grid-cols-4 xl:grid-cols-7 mt-4"></div>
-      <div class="mt-5 flex flex-wrap items-center gap-2">
-        <select id="aTeacher" class="h-11 rounded-xl border border-slate-200 bg-white px-3" aria-label="Xem lớp của giáo viên"></select>
-        <button type="button" id="aReset" class="h-11 px-4 rounded-xl border border-slate-200 bg-white font-semibold">↺ Khôi phục phân công gốc</button>
-      </div>
-      <div id="assignMsg" class="mt-3"></div>
-      <div id="assignList" class="mt-3 space-y-2"></div>
-    </section>
-
-    <!-- ROOMS -->
-    <section id="v-rooms" class="view" hidden>
-      <h1 class="text-2xl font-extrabold">Đặt phòng học</h1>
-      <p class="text-sm text-slate-500">Phòng Zoom cho học thử, kiểm tra, họp giáo viên. Không cho đặt trùng giờ trong cùng một phòng. Lịch đặt lưu trên máy này.</p>
-      <form id="bForm" class="mt-4 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-100 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-        <label class="text-sm lg:col-span-1">Ngày<input id="bDate" type="date" required class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"></label>
-        <label class="text-sm lg:col-span-1">Giờ<input id="bTime" type="time" step="900" required value="18:00" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"></label>
-        <label class="text-sm lg:col-span-1">Thời lượng<select id="bDur" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"><option value="30">30 phút</option><option value="60">60 phút</option><option value="90">90 phút</option></select></label>
-        <label class="text-sm lg:col-span-1">Phòng<select id="bRoom" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"></select></label>
-        <label class="text-sm sm:col-span-2 lg:col-span-2">Nội dung<input id="bTitle" required maxlength="80" placeholder="VD: Học thử HV mẫu…" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"></label>
-        <div class="sm:col-span-2 lg:col-span-6 flex flex-wrap items-center gap-3">
-          <button class="h-11 px-5 rounded-xl bg-brand-600 text-white font-semibold hover:bg-brand-700">Đặt phòng</button>
-          <span id="bMsg" class="text-sm"></span>
+        <div class="flex gap-4 mt-3 text-xs text-slate-500">
+          <span><i class="inline-block w-2.5 h-2.5 rounded-full bg-[#3B82F6] mr-1"></i>IELTS</span>
+          <span><i class="inline-block w-2.5 h-2.5 rounded-full bg-[#F59E0B] mr-1"></i>TOEIC</span>
+          <span><i class="inline-block w-2.5 h-2.5 rounded-full bg-[#8B5CF6] mr-1"></i>Kids</span>
         </div>
-      </form>
-      <div class="mt-5 flex items-center justify-between gap-2"><h2 class="font-bold" id="bDayLabel"></h2></div>
-      <div id="roomBoard" class="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"></div>
+        <div id="cal" class="mt-4"></div>
+      </div>
+
+      <!-- room booking status -->
+      <div class="mt-6 lg:mt-8">
+        <div class="flex items-center justify-between"><h2 class="text-lg font-bold text-slate-900">Room Booking Status</h2><a href="#rooms" class="text-sm font-semibold text-[#2563EB]">View all →</a></div>
+        <div id="roomStatus" class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-5"></div>
+      </div>
     </section>
+
+    <!-- ===== OTHER VIEWS ===== -->
+    <section id="v-students" class="fade" hidden></section>
+    <section id="v-classes" class="fade" hidden></section>
+    <section id="v-schedule" class="fade" hidden></section>
+    <section id="v-teachers" class="fade" hidden></section>
+    <section id="v-rooms" class="fade" hidden></section>
+    <section id="v-attendance" class="fade" hidden></section>
+    <section id="v-payments" class="fade" hidden></section>
+    <section id="v-settings" class="fade" hidden></section>
   </div>
 </main>
 
-<!-- ===== Bottom nav (mobile) ===== -->
-<nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200 bnav" aria-label="Điều hướng">
+<!-- ================= BOTTOM NAV (mobile) ================= -->
+<nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200 bnav" aria-label="Bottom">
   <div id="bottomNav" class="grid grid-cols-5"></div>
 </nav>
 
+<!-- ================= NEW BOOKING MODAL ================= -->
+<div id="modal" class="fixed inset-0 z-50 bg-slate-900/50 grid place-items-end sm:place-items-center p-0 sm:p-4" hidden role="dialog" aria-modal="true" aria-labelledby="mTitleB">
+  <form id="bookForm" class="w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl fade max-h-[92vh] overflow-y-auto">
+    <div class="flex items-center justify-between"><h2 id="mTitleB" class="text-lg font-bold">New Booking</h2>
+      <button type="button" data-close class="grid place-items-center w-9 h-9 rounded-lg hover:bg-slate-100" aria-label="Close">✕</button></div>
+    <div class="grid grid-cols-2 gap-3 mt-4">
+      <label class="col-span-2 text-sm font-medium">Class name<input name="name" required maxlength="40" placeholder="e.g. IELTS Speaking" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"></label>
+      <label class="text-sm font-medium">Type<select name="type" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"><option>IELTS</option><option>TOEIC</option><option>Kids</option></select></label>
+      <label class="text-sm font-medium">Level<input name="level" maxlength="16" placeholder="B2" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"></label>
+      <label class="text-sm font-medium">Date<input name="date" type="date" required class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"></label>
+      <label class="text-sm font-medium">Room<select name="room" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"></select></label>
+      <label class="text-sm font-medium">Start<input name="start" type="time" required value="09:00" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"></label>
+      <label class="text-sm font-medium">End<input name="end" type="time" required value="10:30" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"></label>
+      <label class="col-span-2 text-sm font-medium">Teacher<select name="teacher" class="mt-1 w-full h-11 rounded-xl border border-slate-200 px-3"></select></label>
+    </div>
+    <p id="bookMsg" class="text-sm mt-3"></p>
+    <div class="flex gap-3 mt-4"><button type="button" data-close class="flex-1 h-11 rounded-xl border border-slate-200 font-semibold">Cancel</button>
+      <button class="flex-1 h-11 rounded-xl bg-[#2563EB] text-white font-semibold hover:bg-blue-700">Add to calendar</button></div>
+  </form>
+</div>
+
 <script>
-(function () {
-  'use strict';
-  var NAV = [
-    { id: 'home', label: 'Trang chủ', ic: '🏠' },
-    { id: 'schedule', label: 'Lịch tuần', ic: '📅' },
-    { id: 'classes', label: 'Lớp học', ic: '📚' },
-    { id: 'teachers', label: 'Giáo viên', ic: '👩‍🏫' },
-    { id: 'rooms', label: 'Phòng', ic: '🚪' }
-  ];
-  var DAYS = ['', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
-  var DSHORT = ['', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-  var LS = { data: 'bv_portal_data_v1', assign: 'bv_portal_assign_v1', book: 'bv_portal_book_v1' };
-  var $ = function (id) { return document.getElementById(id); };
-  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-  var store = {
-    get: function (k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
-    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* chế độ riêng tư */ } }
-  };
-  var pad = function (n) { return (n < 10 ? '0' : '') + n; };
-  var iso = function (d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
-  var addDays = function (d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; };
-  var mondayOf = function (d) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); var w = (x.getDay() + 6) % 7; return addDays(x, -w); };
-  var vn = function (d) { return pad(d.getDate()) + '/' + pad(d.getMonth() + 1); };
-  var tMin = function (t) { var p = String(t).split(':'); return (+p[0]) * 60 + (+p[1] || 0); };
-  var tStr = function (m) { return pad(Math.floor(m / 60)) + ':' + pad(m % 60); };
+(function(){
+'use strict';
+var B=BV,$=B.$,esc=B.esc,iso=B.iso,parse=B.parse,addD=B.addD,monOf=B.monOf,tm=B.tm,MON=B.MON,WD=B.WD,TYPE=B.TYPE,svg=B.svg;
+var D=B.db(),today=new Date(),week0=monOf(today),mode='week',view='dashboard',selDate=iso(today),query='';
+function teacher(id){return B.by(D.teachers,id)||{name:'—',avatar:'#64748B'}}
+function ini(n){return B.ini(n)}
+function sched(from,to){return B.sessions(from,to).map(function(s){return{id:s.id,scheduleId:s.scheduleId,cls:s.classId,classId:s.classId,date:s.date,start:s.time,time:s.time,end:s.end,room:s.room,teacher:s.teacherId,teacherId:s.teacherId,name:s.name,type:s.type,level:s.level,size:B.roster(s.classId).length||10}})}
+function pc(s){return B.presentCount(s)}
+function present(s){var p=pc(s);return p.p+p.l}
+function statusCounts(list){var p=0,l=0,a=0;list.forEach(function(s){var c=pc(s);p+=c.p;l+=c.l;a+=c.a});return{p:p,l:l,a:a}}
 
-  // dữ liệu mặc định nhúng sẵn: dùng khi mở file trực tiếp / mất mạng
-  var FALLBACK = { teachers: [{ id: 't1', name: 'GV Anna', group: 'PH', color: '#2563EB' }], rooms: [{ id: 'r1', name: 'Zoom Room 1' }],
-    classes: [{ id: 'c01', code: 'HVMAU-01', student: 'HV mẫu An', level: 'Low Beginner', lop: 'ESL', dur: 28, teacher: 't1', done: 11, total: 30, sessions: [{ day: 1, time: '18:00' }] }], bookings: [] };
-  var D = null, week0 = mondayOf(new Date()), selDay = Math.min(Math.max((new Date().getDay() + 6) % 7 + 1, 1), 6);
+var NAV=[['dashboard','Dashboard','dash'],['students','Students','stu'],['classes','Classes','cls'],['schedule','Schedule','cal'],['teachers','Teachers','tea'],['rooms','Rooms','room'],['attendance','Attendance','att'],['payments','Payments','pay'],['settings','Settings','tea']];
+var BNAV=[['dashboard','Home','home'],['schedule','Calendar','cal'],['classes','Classes','cls'],['rooms','Rooms','room'],['settings','Profile','user']];
+var TITLES={dashboard:['Student Schedule Dashboard','Manage weekly classes, rooms and attendance in one place.'],students:['Students','All students and tuition status.'],classes:['Classes','Courses, levels, teachers and rooms.'],
+ schedule:['Schedule','All sessions in the selected week.'],teachers:['Teachers','Teaching load this week.'],rooms:['Rooms','Room occupancy for the selected day.'],attendance:['Attendance','Tick Present / Late / Absent – saved instantly.'],
+ payments:['Payments','Tuition status this month.'],settings:['Settings','Account, demo data and portals.']};
+function nav(){
+  $('sideNav').innerHTML=NAV.map(function(n){var on=n[0]===view;return '<a href="#'+n[0]+'" class="flex items-center gap-3 px-4 h-11 rounded-lg font-medium '+(on?'bg-[#2563EB] text-white shadow':'text-blue-100 hover:bg-white/10')+'"'+(on?' aria-current="page"':'')+'>'+svg(n[0]==='settings'?'user':n[2])+n[1]+'</a>'}).join('');
+  $('bottomNav').innerHTML=BNAV.map(function(n){var on=n[0]===view;return '<a href="#'+n[0]+'" class="flex flex-col items-center justify-center gap-1 h-16 text-[11px] font-semibold '+(on?'text-[#2563EB]':'text-slate-400')+'"'+(on?' aria-current="page"':'')+'>'+svg(n[2],'w-6 h-6')+n[1]+'</a>'}).join('');
+  $('pageTitle').textContent=TITLES[view][0];$('pageSub').textContent=TITLES[view][1];
+  $('mTitle').innerHTML=(view==='dashboard'?'Schedule':esc(TITLES[view][0]))+' <span aria-hidden="true">📅</span>';
+}
+function route(){var v=(location.hash||'#dashboard').slice(1);if(!TITLES[v])v='dashboard';var ch=v!==view;view=v;
+  Object.keys(TITLES).forEach(function(k){$('v-'+k).hidden=k!==v});nav();render();if(ch)window.scrollTo(0,0)}
+function render(){D=B.db();({dashboard:dash,students:vStudents,classes:vClasses,schedule:vSchedule,teachers:vTeachers,rooms:vRooms,attendance:vAtt,payments:vPay,settings:vSet})[view]()}
+function skel(){var s='';for(var i=0;i<4;i++)s+='<div class="animate-pulse rounded-2xl bg-slate-200/70 h-28"></div>';$('stats').innerHTML=s;$('cal').innerHTML='<div class="grid grid-cols-7 gap-3">'+'<div class="animate-pulse rounded-xl bg-slate-200/70 h-48"></div>'.repeat(7)+'</div>'}
 
-  function teacher(id) { for (var i = 0; i < D.teachers.length; i++) if (D.teachers[i].id === id) return D.teachers[i]; return { id: id, name: '?', color: '#64748B' }; }
-  function assigned(c) { var a = store.get(LS.assign, {}); return a[c.id] || c.teacher; }
-  function kind(c) {
-    if (c.trial) return { k: 'trial', label: 'Học thử', cls: 'bg-sky-50 border-sky-400' };
-    if (c.done >= c.total) return { k: 't2', label: 'Test 2 – Final', cls: 'bg-rose-50 border-rose-400' };
-    if (c.total - c.done === 1) return { k: 't1', label: 'Test 1', cls: 'bg-amber-50 border-amber-400' };
-    return { k: 'x', label: 'Official', cls: 'bg-white border-slate-200' };
-  }
-  function lessonsOfWeek() {
-    var out = [];
-    D.classes.forEach(function (c) {
-      (c.sessions || []).forEach(function (s) {
-        var date = addDays(week0, s.day - 1);
-        out.push({ c: c, day: s.day, date: date, time: s.time, end: tStr(tMin(s.time) + (+c.dur || 28)), t: teacher(assigned(c)) });
-      });
-    });
-    return out.sort(function (a, b) { return a.day - b.day || tMin(a.time) - tMin(b.time); });
-  }
-  function conflicts(list) {
-    var bad = {};
-    list.forEach(function (a, i) {
-      list.forEach(function (b, j) {
-        if (j <= i || a.day !== b.day || a.t.id !== b.t.id) return;
-        if (tMin(a.time) < tMin(b.end) && tMin(b.time) < tMin(a.end)) { bad[a.c.id + a.day + a.time] = 1; bad[b.c.id + b.day + b.time] = 1; }
-      });
-    });
-    return bad;
-  }
+function weekLabel(w){return B.weekLabel(w)}
+function card(t,v,sub,blue,icon){return B.stat(t,v,sub,blue,icon)}
+function dash(){
+  var w=sched(week0,addD(week0,6)),prev=B.sessions(addD(week0,-7),addD(week0,-1));
+  var todayS=sched(today,today),busy={};todayS.forEach(function(s){busy[s.room]=1});
+  var att=D.attendance.filter(function(a){return a.date>=iso(addD(week0,-7))}),rate=B.rateOf(att.length?att:D.attendance),booked=Object.keys(busy).length,diff=w.length-prev.length;
+  $('stats').innerHTML=card('Classes This Week',w.length+' <span class="text-base font-semibold">Classes</span>',(diff>=0?'+':'')+diff+' from last week',true,'cal')+
+    card('Active Students',D.students.length,'+'+Math.max(D.students.length-27,0)+' this month',false,'stu')+card('Rooms Booked',booked+'/'+B.ROOMS.length,Math.round(booked/B.ROOMS.length*100)+'% Occupancy',false,'room')+card('Attendance Rate',rate+'%','+2% vs last week',false,'att');
+  $('weekTitle').textContent='Week of '+weekLabel(week0);
+  [].forEach.call(document.querySelectorAll('[data-mode]'),function(b){var on=b.getAttribute('data-mode')===mode;b.className='px-4 h-9 rounded-lg text-sm font-semibold '+(on?'bg-[#2563EB] text-white shadow':'text-slate-600')});
+  var wf=w.filter(match);
+  $('cal').innerHTML=mode==='week'?B.weekGrid(B.sessions(week0,addD(week0,6)).filter(function(s){return match({name:s.name,room:s.room,teacher:s.teacherId,level:s.level})}),week0):mode==='month'?calMonth():calList(wf);
+  mobile(w);roomStatus();weekSelect();
+}
+function match(s){return !query||(s.name+' '+s.room+' '+teacher(s.teacher).name+' '+s.level).toLowerCase().indexOf(query)>=0}
+function calMonth(){var m1=new Date(week0.getFullYear(),week0.getMonth(),1),start=monOf(m1),all=B.sessions(start,addD(start,41)),h='<div class="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500 mb-2">'+WD.map(function(x){return '<div>'+x+'</div>'}).join('')+'</div><div class="grid grid-cols-7 gap-2">';
+  for(var i=0;i<42;i++){var d=addD(start,i),ds=iso(d),n=all.filter(function(s){return s.date===ds}),out=d.getMonth()!==m1.getMonth();
+    h+='<button type="button" data-goweek="'+ds+'" class="h-20 rounded-xl border text-left p-2 '+(ds===iso(today)?'border-[#2563EB] bg-blue-50':'border-slate-100 bg-white')+(out?' opacity-40':'')+'"><b class="text-sm">'+d.getDate()+'</b><div class="flex flex-wrap gap-1 mt-1">'+
+      n.slice(0,6).map(function(s){return '<i class="w-2 h-2 rounded-full" style="background:'+(TYPE[s.type]||TYPE.IELTS).c+'"></i>'}).join('')+'</div>'+(n.length?'<p class="text-[10px] text-slate-500 mt-1">'+n.length+' classes</p>':'')+'</button>'}
+  return h+'</div>'}
+function calList(L){return '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-slate-500 border-b"><th class="py-2">Date</th><th>Time</th><th>Class</th><th>Level</th><th>Room</th><th>Teacher</th><th>Present</th></tr></thead><tbody>'+
+  L.map(function(s){var d=parse(s.date),T=TYPE[s.type]||TYPE.IELTS,c=pc(s);return '<tr class="border-b border-slate-50"><td class="py-2">'+WD[(d.getDay()+6)%7]+' '+d.getDate()+'</td><td>'+s.start+'–'+s.end+'</td><td><i class="inline-block w-2 h-2 rounded-full mr-2" style="background:'+T.c+'"></i>'+esc(s.name)+'</td><td>'+esc(s.level)+'</td><td>'+esc(s.room)+'</td><td>'+esc(teacher(s.teacher).name)+'</td><td>'+(c.done?(c.p+c.l)+'/'+c.n:'–')+'</td></tr>'}).join('')+'</tbody></table></div>'}
+function mobile(w){
+  var h='';for(var i=0;i<7;i++){var d=addD(week0,i),ds=iso(d),on=ds===selDate;
+    h+='<button type="button" data-date="'+ds+'" class="shrink-0 w-14 h-16 rounded-2xl flex flex-col items-center justify-center '+(on?'bg-[#2563EB] text-white shadow-lg shadow-blue-200':'bg-white border border-slate-100 text-slate-600')+'"><span class="text-[11px] font-medium">'+WD[i]+'</span><span class="text-lg font-bold">'+d.getDate()+'</span></button>'}
+  $('pills').innerHTML=h;
+  var sd=parse(selDate),list=w.filter(function(s){return s.date===selDate&&match(s)});
+  $('todayTitle').textContent=(selDate===iso(today)?'Today · ':'')+WD[(sd.getDay()+6)%7]+' '+MON[sd.getMonth()]+' '+sd.getDate();
+  $('todayList').innerHTML=list.length?list.map(function(s){var t=teacher(s.teacher),T=TYPE[s.type]||TYPE.IELTS,c=pc(s);
+    return '<a href="#attendance" data-att="'+esc(s.id)+'" class="block bg-white rounded-2xl p-4 border border-slate-100 border-l-4 shadow-sm" style="border-left-color:'+T.c+'"><div class="flex items-start gap-3">'+B.avatar(t.name,t.avatar||T.c,'w-11 h-11 text-sm')+'<div class="flex-1 min-w-0">'+
+      '<div class="flex items-start justify-between gap-2"><p class="font-bold text-slate-900">'+esc(s.name)+'</p>'+(c.done?'<span class="shrink-0 text-xs font-bold text-emerald-600">✓ '+(c.p+c.l)+'/'+c.n+'</span>':'<span class="shrink-0 text-xs font-semibold text-slate-400">'+(s.date>iso(today)?'Upcoming':'Not marked')+'</span>')+'</div>'+
+      '<p class="text-sm text-slate-500 mt-0.5">'+s.start+'–'+s.end+' · Room '+esc(s.room)+'</p><p class="text-sm text-slate-600">'+esc(t.name)+(c.done?' · Present '+(c.p+c.l)+'/'+c.n:'')+'</p></div></div></a>'}).join('')
+    :'<p class="text-sm text-slate-400 bg-white rounded-2xl p-5 border border-slate-100 text-center">No classes on this day</p>';
+  var sc=statusCounts(list);
+  $('attPills').innerHTML='<span class="px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold">Present '+sc.p+'</span><span class="px-3 py-1.5 rounded-full bg-amber-100 text-amber-700 text-sm font-semibold">Late '+sc.l+'</span><span class="px-3 py-1.5 rounded-full bg-red-100 text-red-700 text-sm font-semibold">Absent '+sc.a+'</span>';
+}
+function roomStatus(){var now=today.getHours()*60+today.getMinutes(),ts=sched(today,today);
+  var pick=['201','202','103'].map(function(r){var L=ts.filter(function(s){return s.room===r});
+    var cur=L.filter(function(s){return tm(s.start)<=now&&now<tm(s.end)})[0],nxt=L.filter(function(s){return tm(s.start)>now})[0];
+    return cur?{r:r,st:'Occupied',s:cur,badge:'In Use',bc:'bg-emerald-100 text-emerald-700',dot:'bg-emerald-500'}:nxt?{r:r,st:'Upcoming',s:nxt,badge:'Booked',bc:'bg-blue-100 text-blue-700',dot:'bg-blue-500'}:{r:r,st:'Available',s:null,badge:'Free',bc:'bg-slate-100 text-slate-600',dot:'bg-slate-400'}});
+  $('roomStatus').innerHTML=pick.map(function(x){return '<div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm"><div class="flex items-center justify-between"><p class="text-2xl font-extrabold">'+x.r+'</p><span class="text-xs font-bold px-2.5 py-1 rounded-full '+x.bc+'">'+x.badge+'</span></div>'+
+    '<p class="mt-2 flex items-center gap-2 text-sm font-semibold"><i class="w-2 h-2 rounded-full '+x.dot+'"></i>'+x.st+'</p><p class="text-sm text-slate-500 mt-1">'+(x.s?esc(x.s.name)+' · '+x.s.start+'–'+x.s.end:'No booking right now')+'</p></div>'}).join('')}
+function weekSelect(){var h='';for(var i=-4;i<=4;i++){var w=addD(monOf(today),i*7);h+='<option value="'+iso(w)+'"'+(iso(w)===iso(week0)?' selected':'')+'>Week: '+weekLabel(w)+'</option>'}$('mWeek').innerHTML=h}
 
-  /* ---------- điều hướng ---------- */
-  function renderNav(cur) {
-    $('sideNav').innerHTML = NAV.map(function (n) {
-      return '<a href="#' + n.id + '" class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 ' + (n.id === cur ? 'nav-on' : '') + '"' + (n.id === cur ? ' aria-current="page"' : '') +
-        '><span class="nav-ic w-6 text-center">' + n.ic + '</span><span class="font-medium">' + n.label + '</span></a>';
-    }).join('');
-    $('bottomNav').innerHTML = NAV.map(function (n) {
-      return '<a href="#' + n.id + '" class="flex flex-col items-center justify-center gap-0.5 h-16 text-[11px] font-semibold ' + (n.id === cur ? 'bnav-on' : 'text-slate-500') + '"' + (n.id === cur ? ' aria-current="page"' : '') +
-        '><span class="text-xl leading-none">' + n.ic + '</span>' + n.label + '</a>';
-    }).join('');
-    var nv = NAV.filter(function (n) { return n.id === cur; })[0];
-    $('mTitle').textContent = nv ? nv.label : '';
-  }
-  function route() {
-    var id = (location.hash || '#home').slice(1);
-    if (!NAV.some(function (n) { return n.id === id; })) id = 'home';
-    NAV.forEach(function (n) { $('v-' + n.id).hidden = n.id !== id; });
-    renderNav(id);
-    ({ home: renderHome, schedule: renderSchedule, classes: renderClasses, teachers: renderTeachers, rooms: renderRooms })[id]();
-    window.scrollTo(0, 0);
-  }
+function shell(inner){return B.card(inner)}
+function table(head,rows){return '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-slate-500 border-b">'+head.map(function(h){return '<th class="py-2 pr-3 font-semibold">'+h+'</th>'}).join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>'}
+function fee(sid){var m=iso(today).slice(0,7),p=D.payments.filter(function(x){return x.studentId===sid&&x.month===m})[0];return p?p.status:'Unpaid'}
+function badge(s){var c={Paid:'text-emerald-600',Unpaid:'text-amber-600',Overdue:'text-red-600'}[s]||'text-slate-500';return '<span class="font-semibold '+c+'">'+s+'</span>'}
+function vStudents(){var L=D.students.filter(function(s){return !query||(s.name+' '+s.id).toLowerCase().indexOf(query)>=0});
+  $('v-students').innerHTML=shell('<div class="flex justify-between items-center mb-3"><p class="text-sm text-slate-500">'+L.length+' students</p><a href="admin/#students" class="text-sm font-semibold text-[#2563EB]">Manage in Admin →</a></div>'+table(['Student','Level','Class','Parent','Tuition'],L.map(function(s){var c=B.by(D.classes,s['class'])||{name:'—'};
+    return '<tr class="border-b border-slate-50"><td class="py-2 pr-3"><span class="flex items-center gap-2">'+B.avatar(s.name,s.avatar,'w-8 h-8 text-[10px]')+esc(s.name)+'</span></td><td class="pr-3">'+esc(s.level)+'</td><td class="pr-3">'+esc(c.name)+'</td><td class="pr-3">'+esc(s.parent.name)+'</td><td>'+badge(fee(s.id))+'</td></tr>'})))}
+function vClasses(){$('v-classes').innerHTML='<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">'+D.classes.filter(function(c){return !query||(c.name+c.level).toLowerCase().indexOf(query)>=0}).map(function(c){var T=TYPE[c.type]||TYPE.IELTS,S=D.schedules.filter(function(s){return s.classId===c.id&&!s.date});
+  return '<article class="bg-white rounded-2xl p-5 border border-slate-100 border-l-4 shadow-sm" style="border-left-color:'+T.c+'"><div class="flex justify-between gap-2"><b>'+esc(c.name)+'</b><span class="text-xs font-bold px-2 py-0.5 rounded-full h-fit '+T.bg+' '+T.tx+'">'+c.type+'</span></div>'+
+  '<p class="text-sm text-slate-500 mt-1">Level '+esc(c.level)+' · Room '+esc(c.room)+'</p><p class="text-sm mt-2">'+(S.map(function(s){return WD[s.day]+' '+s.time}).join(' · ')||'One-off booking')+'</p><p class="text-sm text-slate-600">'+esc(teacher(c.teacherId).name)+' · '+B.roster(c.id).length+' students</p></article>'}).join('')+'</div>'}
+function vSchedule(){var w=sched(week0,addD(week0,6));$('v-schedule').innerHTML=shell('<div class="flex items-center gap-3 mb-4"><button type="button" data-wk="-1" class="w-9 h-9 rounded-lg border border-slate-200">‹</button><b>Week of '+weekLabel(week0)+'</b><button type="button" data-wk="1" class="w-9 h-9 rounded-lg border border-slate-200">›</button></div>'+calList(w.filter(match)))}
+function vTeachers(){var w=sched(week0,addD(week0,6));$('v-teachers').innerHTML='<div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">'+D.teachers.map(function(t){var L=w.filter(function(s){return s.teacher===t.id}),h=L.reduce(function(a,s){return a+(tm(s.end)-tm(s.start))},0)/60;
+  return '<div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex gap-4">'+B.avatar(t.name,t.avatar,'w-12 h-12 text-sm')+'<div><b>'+esc(t.name)+'</b><p class="text-sm text-slate-500">'+esc(t.skill||'')+'</p><p class="text-sm mt-1"><b>'+L.length+'</b> sessions · <b>'+h.toFixed(1)+'</b> h this week</p></div></div>'}).join('')+'</div>'}
+function vRooms(){var ts=sched(parse(selDate),parse(selDate));
+  $('v-rooms').innerHTML='<label class="text-sm font-medium flex items-center gap-2 mb-4">Day <input id="roomDay" type="date" value="'+selDate+'" class="h-10 rounded-xl border border-slate-200 px-3"></label><div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">'+B.ROOMS.map(function(r){var L=ts.filter(function(s){return s.room===r.id});
+  return '<div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm"><div class="flex justify-between"><b>Room '+r.id+'</b><span class="text-xs text-slate-500">'+r.cap+' seats</span></div><div class="mt-3 space-y-2">'+(L.length?L.map(function(s){var T=TYPE[s.type]||TYPE.IELTS;return '<div class="rounded-lg px-3 py-2 text-sm '+T.bg+'"><b>'+s.start+'–'+s.end+'</b> '+esc(s.name)+'</div>'}).join(''):'<p class="text-sm text-slate-400">Available all day</p>')+'</div></div>'}).join('')+'</div>'}
+var attSel=null;
+function vAtt(){var opts=[];for(var b=13;b>=0;b--){var d=addD(today,-b);sched(d,d).forEach(function(x){opts.push(x)})}
+  var s=opts.filter(function(x){return x.id===attSel})[0]||opts[opts.length-1];if(!s){$('v-attendance').innerHTML=shell('<p class="text-slate-500">No past sessions.</p>');return}
+  var R=B.roster(s.classId),A=B.attOf(s.date,s.classId),cur={};R.forEach(function(st){var a=A.filter(function(x){return x.studentId===st.id})[0];cur[st.id]=a?a.status:''});
+  $('v-attendance').innerHTML=shell('<label class="text-sm font-medium">Session <select id="attSel" class="mt-1 w-full sm:w-auto h-11 rounded-xl border border-slate-200 px-3">'+opts.slice().reverse().map(function(x){var d=parse(x.date);return '<option value="'+esc(x.id)+'"'+(x.id===s.id?' selected':'')+'>'+WD[(d.getDay()+6)%7]+' '+d.getDate()+' · '+x.start+' · '+esc(x.name)+'</option>'}).join('')+'</select></label>'+
+    '<div class="mt-4 divide-y divide-slate-100">'+(R.map(function(st){var v=cur[st.id];return '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-2"><span class="flex items-center gap-2 text-sm font-medium">'+B.avatar(st.name,st.avatar,'w-8 h-8 text-[10px]')+esc(st.name)+'</span><span class="flex gap-1">'+
+      [['Present','bg-emerald-600'],['Late','bg-amber-500'],['Absent','bg-red-600']].map(function(o){var on=v===o[0];return '<button type="button" data-mark="'+esc(s.id)+'" data-stu="'+st.id+'" data-v="'+o[0]+'" aria-pressed="'+on+'" class="h-10 px-3 rounded-lg text-xs font-semibold border '+(on?o[1]+' text-white border-transparent':'border-slate-200 text-slate-500')+'">'+o[0]+'</button>'}).join('')+'</span></div>'}).join('')||'<p class="text-sm text-slate-400 py-3">No student in this class.</p>')+'</div><p class="text-xs text-slate-400 mt-3">Saved instantly to this device.</p>');
+  $('v-attendance')._s=s;}
+function vPay(){var m=iso(today).slice(0,7),P=D.payments.filter(function(p){return p.month===m}),sum=function(k){return P.filter(function(p){return p.status===k})};
+  $('v-payments').innerHTML='<div class="grid gap-3 sm:grid-cols-3 mb-4">'+card('Paid',sum('Paid').length,B.money(sum('Paid').reduce(function(s,p){return s+p.amount},0)),true,'pay')+card('Unpaid',sum('Unpaid').length,'remind this week',false,'pay')+card('Overdue',sum('Overdue').length,'follow up',false,'pay')+'</div>'+
+  shell(table(['Student','Month','Amount','Status'],P.map(function(p){var s=B.by(D.students,p.studentId)||{name:p.studentId};return '<tr class="border-b border-slate-50"><td class="py-2 pr-3">'+esc(s.name)+'</td><td class="pr-3">'+p.month+'</td><td class="pr-3">'+B.money(p.amount)+'</td><td>'+badge(p.status)+'</td></tr>'})))}
+function vSet(){$('v-settings').innerHTML=shell('<div class="flex items-center gap-4">'+B.avatar('Minh Anh','#1E3A8A','w-14 h-14 text-lg')+'<div><b>Admin Minh Anh</b><p class="text-sm text-slate-500">minhanh@brightvista.edu</p></div></div>'+
+  '<h3 class="font-bold mt-6">Portals</h3><div class="mt-2 grid gap-2 grid-cols-2 sm:grid-cols-4">'+[['admin/','Admin'],['teacher/','Teacher'],['student/','Student'],['parent/','Parent']].map(function(p){return '<a href="'+p[0]+'" class="h-11 grid place-items-center rounded-xl border border-slate-200 font-semibold">'+p[1]+'</a>'}).join('')+'</div>'+
+  '<h3 class="font-bold mt-6">Demo data</h3><p class="text-sm text-slate-500">Stored in this browser (localStorage <code>brightvista_db</code>); weekly views cached 5 minutes.</p><button type="button" id="resetDemo" class="mt-3 h-11 px-4 rounded-xl border border-red-200 text-red-600 font-semibold">Reset demo data</button>'+
+  '<h3 class="font-bold mt-6">Current system (Google Sheet)</h3><div class="mt-2 grid gap-2 sm:grid-cols-3"><a href="app/admin/" class="h-11 grid place-items-center rounded-xl border border-slate-200 font-semibold">ADMIN (Web App)</a><a href="app/teacher/" class="h-11 grid place-items-center rounded-xl border border-slate-200 font-semibold">Teacher View</a><a href="ctv/" class="h-11 grid place-items-center rounded-xl border border-slate-200 font-semibold">CTV VIEW</a></div>'+
+  '<div class="mt-2 grid gap-2 sm:grid-cols-2"><a href="admin.html" class="h-11 grid place-items-center rounded-xl border border-slate-200 font-semibold">📘 Admin handbook</a><a href="guide/teacher.html" class="h-11 grid place-items-center rounded-xl border border-slate-200 font-semibold">📗 Teacher guide</a></div>')}
 
-  /* ---------- trang chủ ---------- */
-  function renderHome() {
-    var L = lessonsOfWeek(), bad = conflicts(L);
-    var near = D.classes.filter(function (c) { return !c.trial && c.total - c.done <= 2; }).length;
-    var stat = function (v, l, s) { return '<div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100"><b class="text-2xl text-brand-700">' + v + '</b><p class="text-sm text-slate-600">' + l + '</p>' + (s ? '<p class="text-xs text-slate-400">' + s + '</p>' : '') + '</div>'; };
-    $('stats').innerHTML = stat(D.classes.length, 'lớp đang học', 'dữ liệu mẫu') + stat(L.length, 'buổi trong tuần', vn(week0) + ' – ' + vn(addDays(week0, 5))) +
-      stat(D.teachers.length, 'giáo viên', 'PH + VN') + stat(Object.keys(bad).length ? '⚠ ' + Object.keys(bad).length : near, Object.keys(bad).length ? 'buổi trùng giờ' : 'HV sắp hết khóa', Object.keys(bad).length ? 'xem tab Giáo viên' : 'báo Sale tái khóa');
-    var LG = [['bg-amber-50 border-amber-400', 'Test 1', 'Sau buổi này còn 1 buổi – báo Sale chuẩn bị tái khóa.'], ['bg-rose-50 border-rose-400', 'Test 2 – Final', 'Buổi cuối của khóa. Khóa mới bắt đầu sau buổi này.'],
-      ['bg-sky-50 border-sky-400', 'Học thử (Trial)', 'Chờ kết quả: Đăng ký / Không đăng ký / Hủy.'], ['bg-slate-100 border-slate-400', 'Nghỉ', 'HV nghỉ (có / không tính phí), GV hủy lớp, nghỉ lễ, bảo lưu.'],
-      ['bg-emerald-50 border-emerald-400', 'Học bù', 'Buổi bù theo ngày / giờ / GV đã chốt.'], ['bg-violet-50 border-violet-400', 'Kết thúc sớm', 'Khóa dừng trước dự kiến.']];
-    $('legend').innerHTML = LG.map(function (x) { return '<div class="lesson rounded-xl border p-3 ' + x[0] + '"><b>' + x[1] + '</b><p class="text-sm text-slate-600">' + x[2] + '</p></div>'; }).join('');
-    var FQ = [['Không thấy đủ 12 tab?', 'Đang mở link Teacher View / CTV VIEW (chỉ xem) hoặc link admin thiếu mã. Admin mở qua cổng ADMIN và dán mã của mình.'],
-      ['Trang Web App tải 5–10 giây có phải lỗi?', 'Không. Web App đọc toàn bộ Google Sheet rồi tính lại lịch, chấm công, slot. Chờ trang mở, đừng bấm tải lại liên tục.'],
-      ['Lưu xong có cần F5?', 'Có. Sau khi lưu nhật ký / tạo khóa / đổi lịch, F5 hoặc mở lại link để thấy số mới nhất.'],
-      ['Cài app lên điện thoại thế nào?', 'Android (Chrome): bấm nút “Cài app” hoặc menu ⋮ → Thêm vào màn hình chính. iPhone (Safari): nút Chia sẻ → Thêm vào MH chính.']];
-    $('faq').innerHTML = FQ.map(function (q) { return '<details class="bg-white rounded-xl border border-slate-100 p-4"><summary class="font-semibold cursor-pointer">' + q[0] + '</summary><p class="text-sm text-slate-600 mt-2">' + q[1] + '</p></details>'; }).join('');
-  }
+/* ---------- New Booking: tạo lớp 1 buổi theo ngày, thêm thẳng vào lịch ---------- */
+function openModal(){var f=$('bookForm');f.room.innerHTML=B.ROOMS.map(function(r){return '<option value="'+r.id+'">Room '+r.id+'</option>'}).join('');
+  f.teacher.innerHTML=D.teachers.map(function(t){return '<option value="'+t.id+'">'+esc(t.name)+'</option>'}).join('');f.date.value=selDate;$('bookMsg').textContent='';$('modal').hidden=false;setTimeout(function(){f.name.focus()},30)}
+function closeModal(){$('modal').hidden=true}
+$('bookForm').addEventListener('submit',function(e){e.preventDefault();var f=e.target;
+  if(tm(f.end.value)<=tm(f.start.value)){$('bookMsg').innerHTML='<span class="text-red-600">End time must be after start time.</span>';return}
+  var d=parse(f.date.value),clash=B.sessions(d,d).filter(function(s){return(s.room===f.room.value||s.teacherId===f.teacher.value)&&tm(s.time)<tm(f.end.value)&&tm(f.start.value)<tm(s.end)})[0];
+  if(clash){$('bookMsg').innerHTML='<span class="text-red-600 font-semibold">⚠ Conflict with '+esc(clash.name)+' ('+clash.time+'–'+clash.end+', Room '+clash.room+').</span>';return}
+  var c={id:B.uid('c'),name:f.name.value.trim(),type:f.type.value,level:f.level.value.trim()||'—',teacherId:f.teacher.value,room:f.room.value,fee:0};
+  D.classes.push(c);D.schedules.push({id:B.uid('sc'),classId:c.id,day:(d.getDay()+6)%7,date:f.date.value,time:f.start.value,end:f.end.value,room:c.room});B.save();
+  week0=monOf(d);selDate=f.date.value;closeModal();f.reset();B.toast?0:0;if(view!=='dashboard')location.hash='#dashboard';else render()});
 
-  /* ---------- lịch tuần ---------- */
-  function teacherOptions(sel, all) {
-    return '<option value="">' + all + '</option>' + D.teachers.map(function (t) { return '<option value="' + t.id + '"' + (t.id === sel ? ' selected' : '') + '>' + esc(t.name) + ' (' + t.group + ')</option>'; }).join('');
-  }
-  function lessonCard(x, bad) {
-    var k = kind(x.c), clash = bad[x.c.id + x.day + x.time];
-    return '<div class="lesson rounded-xl border p-3 ' + (clash ? 'bg-red-50 border-red-500' : k.cls) + '">' +
-      '<div class="flex items-center justify-between gap-2"><b class="text-sm">' + x.time + '–' + x.end + '</b><span class="text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:' + x.t.color + '1A;color:' + x.t.color + '">' + esc(x.t.name) + '</span></div>' +
-      '<p class="font-semibold mt-1 leading-snug">' + esc(x.c.student) + '</p>' +
-      '<p class="text-xs text-slate-500">' + esc(x.c.lop) + ' · ' + x.c.dur + '′ · Buổi ' + Math.min(x.c.done, x.c.total) + '/' + x.c.total + '</p>' +
-      (k.k !== 'x' ? '<p class="text-xs font-semibold mt-1">' + k.label + '</p>' : '') + (clash ? '<p class="text-xs font-bold text-red-600 mt-1">⚠ Trùng giờ GV</p>' : '') + '</div>';
-  }
-  function renderSchedule() {
-    var ft = $('sTeacher').value, q = $('sSearch').value.trim().toLowerCase();
-    if (!$('sTeacher').options.length) $('sTeacher').innerHTML = teacherOptions('', '— Tất cả giáo viên —');
-    var all = lessonsOfWeek(), bad = conflicts(all);
-    var L = all.filter(function (x) { return (!ft || x.t.id === ft) && (!q || (x.c.student + ' ' + x.c.code).toLowerCase().indexOf(q) >= 0); });
-    $('weekLabel').textContent = 'Tuần ' + vn(week0) + ' – ' + vn(addDays(week0, 5)) + '/' + addDays(week0, 5).getFullYear() + ' · ' + L.length + ' buổi';
-    var byDay = function (d) { return L.filter(function (x) { return x.day === d; }); };
-    var html = '';
-    for (var d = 1; d <= 6; d++) {
-      var items = byDay(d), today = iso(addDays(week0, d - 1)) === iso(new Date());
-      html += '<div class="min-w-0"><div class="sticky top-0 rounded-xl px-3 py-2 mb-2 ' + (today ? 'bg-brand-600 text-white' : 'bg-white border border-slate-200') + '"><b>' + DAYS[d] + '</b> <span class="text-sm opacity-80">' + vn(addDays(week0, d - 1)) + '</span><span class="float-right text-xs opacity-80">' + items.length + '</span></div><div class="space-y-2">' +
-        (items.length ? items.map(function (x) { return lessonCard(x, bad); }).join('') : '<p class="text-sm text-slate-400 px-1">Không có buổi</p>') + '</div></div>';
-    }
-    $('weekGrid').innerHTML = html;
-    var chips = '';
-    for (var e = 1; e <= 6; e++) chips += '<button type="button" data-day="' + e + '" class="shrink-0 min-w-[64px] h-14 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold ' + (e === selDay ? 'chip-on' : '') + '">' + DSHORT[e] + '<span class="block text-xs font-normal">' + vn(addDays(week0, e - 1)) + ' · ' + byDay(e).length + '</span></button>';
-    $('dayChips').innerHTML = chips;
-    var di = byDay(selDay);
-    $('dayList').innerHTML = di.length ? di.map(function (x) { return lessonCard(x, bad); }).join('') : '<p class="text-sm text-slate-400 bg-white rounded-xl p-4 border border-slate-100">Không có buổi học ' + DAYS[selDay] + '.</p>';
-  }
-
-  /* ---------- lớp học ---------- */
-  function renderClasses() {
-    if (!$('cTeacher').options.length) $('cTeacher').innerHTML = teacherOptions('', '— Mọi giáo viên —');
-    var q = $('cSearch').value.trim().toLowerCase(), lop = $('cLop').value, ft = $('cTeacher').value;
-    var C = D.classes.filter(function (c) {
-      return (!lop || c.lop === lop) && (!ft || assigned(c) === ft) && (!q || (c.student + ' ' + c.code + ' ' + c.level).toLowerCase().indexOf(q) >= 0);
-    });
-    $('cCount').textContent = C.length + ' lớp';
-    $('classList').innerHTML = C.map(function (c) {
-      var t = teacher(assigned(c)), k = kind(c), pct = Math.round(Math.min(c.done, c.total) / c.total * 100), left = Math.max(c.total - c.done, 0);
-      return '<article class="lesson bg-white rounded-2xl border p-4 shadow-sm ' + k.cls + '">' +
-        '<div class="flex items-start justify-between gap-2"><div class="min-w-0"><b class="block truncate">' + esc(c.student) + '</b><span class="text-xs text-slate-500">' + esc(c.code) + ' · ' + esc(c.level) + '</span></div>' +
-        '<span class="shrink-0 text-xs font-bold px-2 py-1 rounded-lg bg-brand-50 text-brand-700">' + esc(c.lop) + '</span></div>' +
-        '<p class="text-sm mt-2"><span style="color:' + t.color + '">●</span> ' + esc(t.name) + ' · ' + c.dur + '′</p>' +
-        '<p class="text-sm text-slate-600">' + (c.sessions || []).map(function (s) { return DSHORT[s.day] + ' ' + s.time; }).join(' · ') + '</p>' +
-        '<div class="mt-3 h-2 rounded-full bg-slate-100 overflow-hidden"><div class="h-full bg-brand-600" style="width:' + pct + '%"></div></div>' +
-        '<p class="text-xs text-slate-500 mt-1">' + Math.min(c.done, c.total) + '/' + c.total + ' buổi · còn ' + left + (k.k !== 'x' ? ' · <b>' + k.label + '</b>' : '') + (left <= 2 && !c.trial ? ' · <b class="text-red-600">sắp hết – báo Sale</b>' : '') + '</p></article>';
-    }).join('') || '<p class="text-sm text-slate-400">Không có lớp phù hợp.</p>';
-  }
-
-  /* ---------- phân công giáo viên ---------- */
-  function renderTeachers(msg) {
-    var all = lessonsOfWeek(), bad = conflicts(all);
-    $('teacherCards').innerHTML = D.teachers.map(function (t) {
-      var n = D.classes.filter(function (c) { return assigned(c) === t.id; }).length;
-      var m = all.filter(function (x) { return x.t.id === t.id; }).reduce(function (s, x) { return s + (x.c.dur >= 50 ? 2 : 1); }, 0);
-      return '<button type="button" data-t="' + t.id + '" class="text-left bg-white rounded-2xl p-3 border border-slate-100 shadow-sm hover:border-brand-200"><span class="block w-8 h-8 rounded-lg mb-2" style="background:' + t.color + '"></span><b class="block text-sm">' + esc(t.name) + '</b><span class="text-xs text-slate-500">' + t.group + ' · ' + n + ' lớp · ' + m + ' slot/tuần</span></button>';
-    }).join('');
-    var sel = $('aTeacher').value;
-    $('aTeacher').innerHTML = teacherOptions(sel, '— Tất cả lớp —');
-    var C = D.classes.filter(function (c) { return !sel || assigned(c) === sel; });
-    $('assignMsg').innerHTML = msg || '';
-    $('assignList').innerHTML = C.map(function (c) {
-      var clash = (c.sessions || []).some(function (s) { return bad[c.id + s.day + s.time]; }), changed = assigned(c) !== c.teacher;
-      return '<div class="bg-white rounded-xl border ' + (clash ? 'border-red-400' : 'border-slate-100') + ' p-3 flex flex-col sm:flex-row sm:items-center gap-2">' +
-        '<div class="flex-1 min-w-0"><b>' + esc(c.student) + '</b> <span class="text-xs text-slate-500">' + esc(c.code) + ' · ' + esc(c.lop) + ' · ' + c.dur + '′</span>' +
-        '<p class="text-sm text-slate-600">' + (c.sessions || []).map(function (s) { return DSHORT[s.day] + ' ' + s.time; }).join(' · ') + (changed ? ' · <span class="text-brand-700 font-semibold">đã đổi GV</span>' : '') + (clash ? ' · <span class="text-red-600 font-bold">⚠ trùng giờ</span>' : '') + '</p></div>' +
-        '<select data-c="' + c.id + '" class="h-11 rounded-xl border border-slate-200 bg-white px-3 sm:w-56" aria-label="Giáo viên của ' + esc(c.student) + '">' +
-        D.teachers.map(function (t) { return '<option value="' + t.id + '"' + (t.id === assigned(c) ? ' selected' : '') + '>' + esc(t.name) + '</option>'; }).join('') + '</select></div>';
-    }).join('');
-  }
-  function reassign(cid, tid) {
-    var a = store.get(LS.assign, {}), c = D.classes.filter(function (x) { return x.id === cid; })[0];
-    if (!c) return;
-    if (tid === c.teacher) delete a[cid]; else a[cid] = tid;
-    store.set(LS.assign, a);
-    var bad = conflicts(lessonsOfWeek()), clash = (c.sessions || []).some(function (s) { return bad[c.id + s.day + s.time]; });
-    renderTeachers(clash ? '<p class="rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3">⚠ ' + esc(teacher(tid).name) + ' đã có lớp khác trùng giờ với ' + esc(c.student) + '. Chọn GV khác hoặc đổi giờ.</p>'
-      : '<p class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3">✔ Đã giao ' + esc(c.student) + ' cho ' + esc(teacher(tid).name) + ' – không trùng giờ.</p>');
-  }
-
-  /* ---------- đặt phòng ---------- */
-  function bookings() {
-    var seed = (D.bookings || []).map(function (b) { return { id: b.id, room: b.room, date: iso(addDays(week0, b.day - 1)), time: b.time, dur: b.dur, title: b.title, seed: true }; });
-    return seed.concat(store.get(LS.book, []));
-  }
-  function renderRooms(msg) {
-    if (!$('bRoom').options.length) $('bRoom').innerHTML = D.rooms.map(function (r) { return '<option value="' + r.id + '">' + esc(r.name) + '</option>'; }).join('');
-    if (!$('bDate').value) $('bDate').value = iso(new Date());
-    var date = $('bDate').value, d = new Date(date + 'T00:00:00');
-    $('bDayLabel').textContent = 'Lịch phòng ngày ' + (isNaN(d) ? date : vn(d) + '/' + d.getFullYear());
-    var B = bookings().filter(function (b) { return b.date === date; }).sort(function (a, b) { return tMin(a.time) - tMin(b.time); });
-    $('roomBoard').innerHTML = D.rooms.map(function (r) {
-      var items = B.filter(function (b) { return b.room === r.id; });
-      return '<div class="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm"><b>' + esc(r.name) + '</b><p class="text-xs text-slate-500 mb-2">' + esc(r.note || '') + '</p>' +
-        (items.length ? items.map(function (b) {
-          return '<div class="flex items-center justify-between gap-2 rounded-lg bg-brand-50 border border-brand-100 px-3 py-2 mb-2"><span class="min-w-0"><b class="text-sm">' + b.time + '–' + tStr(tMin(b.time) + (+b.dur)) + '</b><span class="block text-xs text-slate-600 truncate">' + esc(b.title) + '</span></span>' +
-            (b.seed ? '<span class="text-[10px] text-slate-400">mẫu</span>' : '<button type="button" data-del="' + b.id + '" class="shrink-0 w-9 h-9 rounded-lg border border-slate-200 bg-white text-slate-500" aria-label="Hủy đặt phòng">✕</button>') + '</div>';
-        }).join('') : '<p class="text-sm text-slate-400">Trống cả ngày</p>') + '</div>';
-    }).join('');
-    $('bMsg').innerHTML = msg || '';
-  }
-  function book(e) {
-    e.preventDefault();
-    var b = { id: 'u' + Date.now(), room: $('bRoom').value, date: $('bDate').value, time: $('bTime').value, dur: +$('bDur').value, title: $('bTitle').value.trim() };
-    if (!b.date || !b.time || !b.title) return renderRooms('<span class="text-red-600">Điền đủ ngày, giờ, nội dung.</span>');
-    var s = tMin(b.time), e2 = s + b.dur;
-    var clash = bookings().filter(function (x) { return x.room === b.room && x.date === b.date && tMin(x.time) < e2 && s < tMin(x.time) + (+x.dur); })[0];
-    if (clash) return renderRooms('<span class="text-red-600 font-semibold">⚠ Trùng với “' + esc(clash.title) + '” lúc ' + clash.time + '. Chọn giờ / phòng khác.</span>');
-    var mine = store.get(LS.book, []); mine.push(b); store.set(LS.book, mine);
-    $('bTitle').value = '';
-    renderRooms('<span class="text-emerald-700 font-semibold">✔ Đã đặt ' + esc(teacherRoom(b.room)) + ' ' + b.time + '.</span>');
-  }
-  function teacherRoom(id) { var r = D.rooms.filter(function (x) { return x.id === id; })[0]; return r ? r.name : id; }
-
-  /* ---------- sự kiện ---------- */
-  document.addEventListener('click', function (e) {
-    var t = e.target.closest ? e.target : e.target.parentNode;
-    var day = t.closest('[data-day]'); if (day) { selDay = +day.getAttribute('data-day'); renderSchedule(); return; }
-    var tc = t.closest('[data-t]'); if (tc) { $('aTeacher').value = tc.getAttribute('data-t'); renderTeachers(); return; }
-    var del = t.closest('[data-del]');
-    if (del) { var id = del.getAttribute('data-del'); store.set(LS.book, store.get(LS.book, []).filter(function (b) { return b.id !== id; })); renderRooms('<span class="text-slate-600">Đã hủy đặt phòng.</span>'); return; }
-  });
-  document.addEventListener('change', function (e) { var c = e.target.getAttribute && e.target.getAttribute('data-c'); if (c) reassign(c, e.target.value); });
-  $('wPrev').onclick = function () { week0 = addDays(week0, -7); renderSchedule(); };
-  $('wNext').onclick = function () { week0 = addDays(week0, 7); renderSchedule(); };
-  $('wToday').onclick = function () { week0 = mondayOf(new Date()); renderSchedule(); };
-  $('sTeacher').onchange = renderSchedule; $('sSearch').oninput = renderSchedule;
-  $('cSearch').oninput = renderClasses; $('cLop').onchange = renderClasses; $('cTeacher').onchange = renderClasses;
-  $('aTeacher').onchange = function () { renderTeachers(); };
-  $('aReset').onclick = function () { store.set(LS.assign, {}); renderTeachers('<p class="rounded-xl bg-slate-50 border border-slate-200 text-sm px-4 py-3">Đã khôi phục phân công gốc.</p>'); };
-  $('bForm').addEventListener('submit', book);
-  $('bDate').onchange = function () { renderRooms(); };
-  window.addEventListener('hashchange', route);
-
-  /* ---------- PWA ---------- */
-  var deferred = null;
-  window.addEventListener('beforeinstallprompt', function (e) {
-    e.preventDefault(); deferred = e;
-    [].forEach.call(document.querySelectorAll('[data-install]'), function (b) { b.hidden = false; });
-  });
-  document.addEventListener('click', function (e) {
-    var b = e.target.closest && e.target.closest('[data-install]');
-    if (!b || !deferred) return;
-    deferred.prompt(); deferred.userChoice.then(function () { deferred = null; [].forEach.call(document.querySelectorAll('[data-install]'), function (x) { x.hidden = true; }); });
-  });
-  if ('serviceWorker' in navigator && location.protocol === 'https:') {
-    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* bỏ qua */ }); });
-  }
-
-  /* ---------- nạp dữ liệu: JSON → localStorage → dữ liệu nhúng ---------- */
-  function start(data) { D = data; route(); }
-  var cached = store.get(LS.data, null);
-  fetch('data/schedule.json', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(function (j) { store.set(LS.data, j); start(j); })
-    .catch(function () { start(cached || FALLBACK); });
+/* ---------- events ---------- */
+document.addEventListener('click',function(e){var t=e.target.closest?e.target:null;if(!t)return;
+  if(t.closest('[data-new]')){openModal();return}
+  if(t.closest('[data-close]')||t===$('modal')){closeModal();return}
+  var wk=t.closest('[data-wk]');if(wk){week0=addD(week0,7*+wk.getAttribute('data-wk'));selDate=iso(week0);render();return}
+  var md=t.closest('[data-mode]');if(md){mode=md.getAttribute('data-mode');render();return}
+  var gw=t.closest('[data-goweek]');if(gw){week0=monOf(parse(gw.getAttribute('data-goweek')));mode='week';render();return}
+  var dt=t.closest('[data-date]');if(dt){selDate=dt.getAttribute('data-date');render();return}
+  var ad=t.closest('[data-att]');if(ad){attSel=ad.getAttribute('data-att');return}
+  var mk=t.closest('[data-mark]');if(mk){var s=$('v-attendance')._s,A=B.attOf(s.date,s.classId),map={};B.roster(s.classId).forEach(function(st){var a=A.filter(function(x){return x.studentId===st.id})[0];if(a)map[st.id]=a.status});
+    map[mk.getAttribute('data-stu')]=mk.getAttribute('data-v');B.setAttendance(s,map);attSel=s.id;render();return}
+  if(t.id==='resetDemo'){D=B.reset();render()}
+});
+document.addEventListener('change',function(e){var t=e.target;
+  if(t.hasAttribute('data-role')&&t.value){location.href=t.value;return}
+  if(t.id==='mWeek'){week0=parse(t.value);selDate=t.value;render()}
+  else if(t.id==='attSel'){attSel=t.value;vAtt()}
+  else if(t.id==='roomDay'){selDate=t.value;vRooms()}});
+$('q').addEventListener('input',function(){query=this.value.trim().toLowerCase();render()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('modal').hidden)closeModal()});
+window.addEventListener('hashchange',route);
+B.sw('');
+skel();requestAnimationFrame(route);
 })();
 </script>
 </body>
