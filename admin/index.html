@@ -175,14 +175,16 @@ var BV = (function () {
       '<aside class="hidden lg:flex fixed inset-y-0 left-0 w-[260px] flex-col bg-[#1E3A8A] text-white z-40">' +
       '<a href="' + o.base + 'portal.html" class="flex items-center gap-3 px-6 pt-7 pb-6"><span class="grid place-items-center w-11 h-11 rounded-xl bg-white/15 text-2xl">🎓</span><span><b class="block text-xl tracking-tight">BrightVista</b><span class="text-sm text-blue-200">' + esc(o.brandSub || 'English Center') + '</span></span></a>' +
       '<nav id="bvSide" class="flex-1 px-4 space-y-1 overflow-y-auto" aria-label="Main"></nav>' +
-      '<div class="m-4 p-3 rounded-xl bg-white/10 flex items-center gap-3"><span id="bvAva">' + avatar(o.userName || 'Admin', '#60A5FA', 'w-10 h-10 text-sm') + '</span><div class="min-w-0"><p id="bvUser" class="font-semibold text-sm truncate">' + esc(o.userName || '') + '</p><p id="bvUserSub" class="text-xs text-blue-200 truncate">' + esc(o.userSub || '') + '</p></div></div></aside>' +
+      '<div class="m-4 p-3 rounded-xl bg-white/10 flex items-center gap-3"><span id="bvAva">' + avatar(o.userName || 'Admin', '#60A5FA', 'w-10 h-10 text-sm') + '</span><div class="min-w-0"><p id="bvUser" class="font-semibold text-sm truncate">' + esc(o.userName || '') + '</p><p id="bvUserSub" class="text-xs text-blue-200 truncate">' + esc(o.userSub || '') + '</p></div></div>' +
+      '<div class="flex gap-2 px-4 pb-5"><button type="button" data-chpw class="flex-1 h-9 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold">Đổi mật khẩu</button><button type="button" data-logout class="flex-1 h-9 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold">Đăng xuất</button></div></aside>' +
       '<div class="lg:ml-[260px] min-h-screen pb-24 lg:pb-10">' +
       '<header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-100"><div class="flex items-center gap-3 px-4 lg:px-8 h-14">' +
       '<a href="' + o.base + 'portal.html" class="lg:hidden grid place-items-center w-9 h-9 rounded-lg bg-[#1E3A8A] text-lg">🎓</a>' +
       '<div class="min-w-0 flex-1"><h1 id="bvTitle" class="font-extrabold text-slate-900 truncate"></h1></div>' + (o.picker || '') +
       '<nav class="hidden md:flex items-center gap-1 text-sm" aria-label="Portals">' + P.map(function (p) { var on = p[1].toLowerCase() === o.portal; return '<a href="' + o.base + p[0] + '" class="px-2.5 py-1.5 rounded-lg font-semibold ' + (on ? 'bg-blue-50 text-[#2563EB]' : 'text-slate-500 hover:text-slate-900') + '">' + p[1] + '</a>'; }).join('<span class="text-slate-300">|</span>') + '</nav>' +
       '<details class="md:hidden relative"><summary class="list-none grid place-items-center w-9 h-9 rounded-lg border border-slate-200 text-slate-600" aria-label="Switch portal">⇄</summary><div class="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl border border-slate-100 p-1">' +
-      P.map(function (p) { return '<a href="' + o.base + p[0] + '" class="block px-3 py-2 rounded-lg text-sm font-semibold ' + (p[1].toLowerCase() === o.portal ? 'text-[#2563EB] bg-blue-50' : 'text-slate-700') + '">' + p[1] + '</a>'; }).join('') + '</div></details>' +
+      P.map(function (p) { return '<a href="' + o.base + p[0] + '" class="block px-3 py-2 rounded-lg text-sm font-semibold ' + (p[1].toLowerCase() === o.portal ? 'text-[#2563EB] bg-blue-50' : 'text-slate-700') + '">' + p[1] + '</a>'; }).join('') +
+      '<hr class="my-1 border-slate-100"><button type="button" data-chpw class="block w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-slate-700">Đổi mật khẩu</button><button type="button" data-logout class="block w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-red-600">Đăng xuất</button></div></details>' +
       '</div></header><main id="bvMain" class="px-4 lg:px-8 pt-5 lg:pt-8"><p id="bvSub" class="hidden lg:block text-slate-500 -mt-3 mb-6"></p><div id="bvView"></div></main></div>' +
       '<nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200" style="padding-bottom:env(safe-area-inset-bottom,0px)" aria-label="Bottom"><div id="bvBottom" class="grid grid-cols-' + o.bnav.length + '"></div></nav>' +
       '<div id="bvModal" class="fixed inset-0 z-50 bg-slate-900/50 grid place-items-end sm:place-items-center" hidden role="dialog" aria-modal="true"></div>' +
@@ -204,7 +206,8 @@ var BV = (function () {
       if (changed) window.scrollTo(0, 0);
     }
     window.addEventListener('hashchange', route);
-    document.addEventListener('click', function (e) { var t = e.target; if (t === $('bvModal') || (t.closest && t.closest('[data-close]'))) closeModal(); });
+    document.addEventListener('click', function (e) { var t = e.target; if (t === $('bvModal') || (t.closest && t.closest('[data-close]'))) closeModal();
+      if (t.closest && t.closest('[data-logout]')) logout(o.base); if (t.closest && t.closest('[data-chpw]')) pwModal(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
     return { route: route, refresh: function () { render(cur, $('bvView')); }, current: function () { return cur; }, setUser: function (n, s, col) { $('bvUser').textContent = n; $('bvUserSub').textContent = s; $('bvAva').innerHTML = avatar(n, col || '#60A5FA', 'w-10 h-10 text-sm'); } };
   }
@@ -215,7 +218,7 @@ var BV = (function () {
       '<div class="mt-4">' + body + '</div><p class="bv-msg text-sm mt-3"></p><div class="flex gap-3 mt-4"><button type="button" data-close class="flex-1 h-11 rounded-xl border border-slate-200 font-semibold">Cancel</button><button class="flex-1 h-11 rounded-xl bg-[#2563EB] text-white font-semibold hover:bg-blue-700">Save</button></div></form>';
     m.hidden = false;
     var f = m.querySelector('form'), first = f.querySelector('input,select,textarea'); if (first) setTimeout(function () { first.focus(); }, 30);
-    f.addEventListener('submit', function (e) { e.preventDefault(); var err = onSubmit(f); if (err) f.querySelector('.bv-msg').innerHTML = '<span class="text-red-600 font-semibold">' + esc(err) + '</span>'; else closeModal(); });
+    f.addEventListener('submit', function (e) { e.preventDefault(); var err = onSubmit(f); if (err === 'Đang kiểm tra…') f.querySelector('.bv-msg').textContent = err; else if (err) f.querySelector('.bv-msg').innerHTML = '<span class="text-red-600 font-semibold">' + esc(err) + '</span>'; else closeModal(); });
   }
   function closeModal() { var m = $('bvModal'); if (m) { m.hidden = true; m.innerHTML = ''; } }
   var tt = null;
@@ -251,23 +254,94 @@ var BV = (function () {
     }
     return h + '</div>';
   }
+
+  /* ---------- đăng nhập (demo: kiểm tra trên trình duyệt, mật khẩu băm SHA-256, phiên 12 giờ) ---------- */
+  var SKEY = 'bv_session', SALT = 'brightvista:', HOME = { admin: 'admin/', teacher: 'teacher/', student: 'student/', parent: 'parent/' };
+  var ROLE_VI = { admin: 'Admin', teacher: 'Giáo viên', student: 'Học viên', parent: 'Phụ huynh' };
+  function users() {
+    var D = db(), U = D.users || [], have = {}, add = function (x) { if (!have[x.u]) { U.push(x); have[x.u] = 1; } };
+    U.forEach(function (x) { have[x.u] = 1; });
+    add({ u: 'admin', role: 'admin', name: 'Admin Minh Anh', ref: '' });
+    add({ u: 'nhung', role: 'admin', name: 'Nhung (Admin)', ref: '' });
+    D.teachers.forEach(function (t) { add({ u: t.name.replace(/^(Mr|Ms|Mrs)\.\s*/, '').toLowerCase().replace(/\s+/g, ''), role: 'teacher', name: t.name, ref: t.id }); });
+    D.students.forEach(function (s) { var n = s.id.replace(/\D/g, ''); add({ u: 'hs' + n, role: 'student', name: s.name, ref: s.id }); add({ u: 'ph' + n, role: 'parent', name: (s.parent && s.parent.name) || 'Phụ huynh ' + s.name, ref: s.id }); });
+    if (!D.users || D.users.length !== U.length) { D.users = U; store.set(KEY, D); }
+    return U;
+  }
+  function sha(t) {
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(SALT + t)).then(function (b) { return [].map.call(new Uint8Array(b), function (x) { return (x < 16 ? '0' : '') + x.toString(16); }).join(''); });
+  }
+  var DEF = '';                                        // băm của mật khẩu tạm, tính 1 lần
+  function login(u, p) {
+    u = String(u || '').trim().toLowerCase();
+    var x = users().filter(function (k) { return k.u === u; })[0];
+    return Promise.all([sha(p), DEF ? DEF : sha('1234')]).then(function (h) {
+      DEF = h[1];
+      if (!x || h[0] !== (x.h || DEF)) throw new Error('Sai tên đăng nhập hoặc mật khẩu');
+      var s = { u: x.u, role: x.role, name: x.name, ref: x.ref, t: Date.now(), temp: !x.h };
+      store.set(SKEY, s); return s;
+    });
+  }
+  function session() { var s = store.get(SKEY, null); if (!s || Date.now() - s.t > 12 * 3600000) return null; var x = users().filter(function (k) { return k.u === s.u; })[0]; return x ? s : null; }
+  function logout(base) { store.del(SKEY); location.href = (base || '') + 'portal.html'; }
+  function changePw(oldp, newp) {
+    var s = session(); if (!s) return Promise.reject(new Error('Chưa đăng nhập'));
+    if (String(newp).length < 4) return Promise.reject(new Error('Mật khẩu mới tối thiểu 4 ký tự'));
+    return login(s.u, oldp).then(function () { return sha(newp); }).then(function (h) {
+      var D = db(); D.users.filter(function (k) { return k.u === s.u; })[0].h = h; store.set(KEY, D);
+      s.temp = false; store.set(SKEY, s);
+    });
+  }
+  /** Chặn trang: chưa đăng nhập / sai vai trò → màn hình đăng nhập. Đúng → cb(session). */
+  function requireLogin(roles, base, cb) {
+    var s = session();
+    if (s && roles.indexOf(s.role) >= 0) return cb(s);
+    var wrong = s && roles.indexOf(s.role) < 0;
+    document.body.insertAdjacentHTML('afterbegin', '<div id="bvLogin" class="fixed inset-0 z-[70] grid place-items-center bg-[#1E3A8A] px-4 overflow-y-auto">' +
+      '<form class="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 my-8 text-slate-800 fade"><div class="text-center"><div class="mx-auto grid place-items-center w-14 h-14 rounded-2xl bg-[#2563EB] text-3xl">🎓</div>' +
+      '<h1 class="mt-3 text-2xl font-extrabold">BrightVista</h1><p class="text-sm text-slate-500">Đăng nhập ' + roles.map(function (r) { return ROLE_VI[r]; }).join(' / ') + '</p></div>' +
+      (wrong ? '<p class="mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm px-3 py-2">Tài khoản <b>' + esc(s.u) + '</b> (' + ROLE_VI[s.role] + ') không vào được trang này. <a class="font-bold underline" href="' + base + HOME[s.role] + '">Về trang của bạn</a></p>' : '') +
+      '<label class="block text-sm font-medium mt-5">Tên đăng nhập<input name="u" autocomplete="username" autocapitalize="none" required class="mt-1 w-full h-12 rounded-xl border border-slate-200 px-3"></label>' +
+      '<label class="block text-sm font-medium mt-3">Mật khẩu<input name="p" type="password" autocomplete="current-password" required class="mt-1 w-full h-12 rounded-xl border border-slate-200 px-3"></label>' +
+      '<p class="bv-err text-sm text-red-600 font-semibold mt-3" role="alert"></p><button class="mt-2 w-full h-12 rounded-xl bg-[#2563EB] text-white font-bold">Đăng nhập</button>' +
+      '<p class="text-xs text-slate-400 text-center mt-4">Tài khoản do trung tâm cấp. Quên mật khẩu: liên hệ Admin.</p></form></div>');
+    var f = document.querySelector('#bvLogin form');
+    setTimeout(function () { f.u.focus(); }, 30);
+    f.addEventListener('submit', function (e) {
+      e.preventDefault(); f.querySelector('.bv-err').textContent = '';
+      login(f.u.value, f.p.value).then(function (s2) {
+        if (roles.indexOf(s2.role) < 0) { location.href = base + HOME[s2.role]; return; }
+        location.reload();
+      }).catch(function (err) { f.querySelector('.bv-err').textContent = err.message; f.p.value = ''; f.p.focus(); });
+    });
+  }
+  function pwModal() {
+    var s = session(); if (!s) return;
+    modal('Đổi mật khẩu – ' + s.u, field('Mật khẩu hiện tại', inp('o', '', 'type="password" required autocomplete="current-password"')) + '<div class="mt-3">' + field('Mật khẩu mới', inp('n', '', 'type="password" required minlength="4" autocomplete="new-password"')) + '</div>' +
+      '<p class="text-xs text-slate-500 mt-3">Bản demo: mật khẩu mới lưu trên trình duyệt của máy này.</p>', function (f) {
+      changePw(f.o.value, f.n.value).then(function () { closeModal(); toast('Đã đổi mật khẩu'); }).catch(function (e) { var m = document.querySelector('#bvModal .bv-msg'); if (m) m.innerHTML = '<span class="text-red-600 font-semibold">' + esc(e.message) + '</span>'; });
+      return 'Đang kiểm tra…';
+    });
+  }
+
   function sw(base) { if ('serviceWorker' in navigator && location.protocol === 'https:') window.addEventListener('load', function () { navigator.serviceWorker.register(base + 'sw.js', { scope: base }).catch(function () { }); }); }
 
   return { db: db, save: save, reset: reset, by: by, uid: uid, sessions: sessions, roster: roster, attOf: attOf, presentCount: presentCount, setAttendance: setAttendance, rateOf: rateOf,
     iso: iso, parse: parse, addD: addD, monOf: monOf, tm: tm, esc: esc, MON: MON, WD: WD, TYPE: TYPE, ROOMS: ROOMS, store: store,
     svg: svg, avatar: avatar, ini: ini, weekLabel: weekLabel, money: money, $: $, layout: layout, skeleton: skeleton, modal: modal, closeModal: closeModal, toast: toast, csv: csv,
-    field: field, inp: inp, sel: sel, card: card, stat: stat, chip: chip, weekGrid: weekGrid, sw: sw };
+    field: field, inp: inp, sel: sel, card: card, stat: stat, chip: chip, weekGrid: weekGrid, sw: sw,
+    users: users, login: login, session: session, logout: logout, requireLogin: requireLogin, pwModal: pwModal, ROLE_VI: ROLE_VI };
 })();
 </script>
 <script>
-(function () {
+BV.requireLogin(['admin'], '../', function (SS) {
 'use strict';
 var B = BV, esc = B.esc, D = B.db(), today = new Date(), w0 = B.monOf(today), q = '', fstatus = '';
-var app = B.layout({ base: '../', portal: 'admin', brandSub: 'Admin Portal', userName: 'Admin Minh Anh', userSub: 'minhanh@brightvista.edu',
-  nav: [['dashboard', 'Dashboard', 'dash'], ['students', 'Students', 'stu'], ['classes', 'Classes', 'cls'], ['teachers', 'Teachers', 'tea'], ['schedule', 'Schedule', 'cal'], ['rooms', 'Rooms', 'room'], ['attendance', 'Attendance', 'att'], ['zalo', 'Nhật ký Zalo', 'chat'], ['payments', 'Payments', 'pay'], ['reports', 'Reports', 'rep']],
+var app = B.layout({ base: '../', portal: 'admin', brandSub: 'Admin Portal', userName: SS.name, userSub: 'Đăng nhập: ' + SS.u,
+  nav: [['dashboard', 'Dashboard', 'dash'], ['students', 'Students', 'stu'], ['classes', 'Classes', 'cls'], ['teachers', 'Teachers', 'tea'], ['schedule', 'Schedule', 'cal'], ['rooms', 'Rooms', 'room'], ['attendance', 'Attendance', 'att'], ['zalo', 'Nhật ký Zalo', 'chat'], ['payments', 'Payments', 'pay'], ['reports', 'Reports', 'rep'], ['accounts', 'Tài khoản', 'user']],
   bnav: [['dashboard', 'Home', 'home'], ['students', 'Students', 'stu'], ['schedule', 'Schedule', 'cal'], ['zalo', 'Zalo', 'chat'], ['payments', 'Fees', 'pay']],
   subs: { dashboard: 'Overview of revenue, unpaid fees, classes and rooms.', students: 'Add, edit, delete students – saved instantly.', classes: 'Create classes, assign teacher and room.', teachers: 'Teachers and their weekly load.',
-    schedule: 'Drag a class block to another day to reschedule.', rooms: 'Live room status for today.', attendance: 'Student × date grid – tick and bulk save.', payments: 'Track Paid / Unpaid / Overdue fees.', zalo: 'Mỗi tin Zalo = 1 lần lưu. HV nghỉ / GV hủy lớp tự cập nhật điểm danh các buổi đó.', reports: 'Export attendance and revenue (CSV opens in Excel).' },
+    schedule: 'Drag a class block to another day to reschedule.', rooms: 'Live room status for today.', attendance: 'Student × date grid – tick and bulk save.', payments: 'Track Paid / Unpaid / Overdue fees.', accounts: 'Tài khoản đăng nhập của Admin, giáo viên, học viên, phụ huynh. Mật khẩu tạm: 1234.', zalo: 'Mỗi tin Zalo = 1 lần lưu. HV nghỉ / GV hủy lớp tự cập nhật điểm danh các buổi đó.', reports: 'Export attendance and revenue (CSV opens in Excel).' },
   render: render });
 function cls(id) { return B.by(D.classes, id) || { name: '—', type: 'IELTS', level: '', fee: 0 }; }
 function tea(id) { return B.by(D.teachers, id) || { name: '—', avatar: '#64748B' }; }
@@ -279,7 +353,7 @@ function btn(act, label, icon, cls2) { return '<button type="button" data-act="'
 function table(head, rows, empty) { return B.card('<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-slate-500 border-b">' + head.map(function (h) { return '<th class="py-2 pr-3 font-semibold whitespace-nowrap">' + h + '</th>'; }).join('') + '</tr></thead><tbody>' + (rows.join('') || '<tr><td class="py-6 text-center text-slate-400" colspan="' + head.length + '">' + (empty || 'No data') + '</td></tr>') + '</tbody></table></div>', 'p-4'); }
 function match(s) { return !q || s.toLowerCase().indexOf(q) >= 0; }
 
-function render(v, el) { ({ zalo: zalo, dashboard: dash, students: students, classes: classes, teachers: teachers, schedule: schedule, rooms: rooms, attendance: attendance, payments: payments, reports: reports })[v](el); }
+function render(v, el) { ({ accounts: accounts, zalo: zalo, dashboard: dash, students: students, classes: classes, teachers: teachers, schedule: schedule, rooms: rooms, attendance: attendance, payments: payments, reports: reports })[v](el); }
 
 var ZTYPES = [['HV nghỉ không tính phí HV và GV', 'Absent'], ['HV nghỉ tính phí GV và HV', 'Absent'], ['HV nghỉ chưa rõ phí', 'Absent'], ['GV hủy lớp (chọn HV)', 'Absent'], ['GV hủy lớp all', 'Absent'],
   ['Học bù', ''], ['Đổi giờ/GV 1 buổi', ''], ['Học thiếu giờ', 'Late'], ['Bảo lưu', ''], ['Kết thúc sớm/Hủy khóa', ''], ['Nghỉ lễ', 'Absent'], ['Tái khóa (ghi nhận)', ''], ['Khác (ghi chú)', '']];
@@ -316,6 +390,20 @@ function zalo(el) {
     });
     B.save(); B.toast('Đã lưu tin Zalo' + (n ? ' – cập nhật ' + n + ' điểm danh' : '')); app.refresh();
   });
+}
+
+var accRole = '';
+function accounts(el) {
+  var U = B.users().filter(function (x) { return (!accRole || x.role === accRole) && match(x.u + ' ' + x.name); });
+  var home = { admin: 'admin/', teacher: 'teacher/', student: 'student/', parent: 'parent/' };
+  el.innerHTML = toolbar('Tìm tài khoản / tên...', btn('csvAcc', 'CSV', 'dl', 'border border-slate-200 bg-white text-slate-700'),
+    '<select data-accrole class="h-11 rounded-xl border border-slate-200 bg-white px-3">' + [['', 'Mọi vai trò'], ['admin', 'Admin'], ['teacher', 'Giáo viên'], ['student', 'Học viên'], ['parent', 'Phụ huynh']].map(function (r) { return '<option value="' + r[0] + '"' + (r[0] === accRole ? ' selected' : '') + '>' + r[1] + '</option>'; }).join('') + '</select>') +
+    '<p class="text-sm text-slate-500 mb-2">' + U.length + ' tài khoản · đăng nhập tại trang của từng vai trò hoặc <a class="underline" href="../portal.html">portal.html</a></p>' +
+    table(['Tên đăng nhập', 'Vai trò', 'Họ tên', 'Trang', 'Mật khẩu', ''], U.map(function (x) {
+      return '<tr class="border-b border-slate-50"><td class="py-2 pr-3 font-mono font-semibold">' + esc(x.u) + '</td><td class="pr-3">' + B.ROLE_VI[x.role] + '</td><td class="pr-3">' + esc(x.name) + '</td><td class="pr-3 text-slate-500">/' + home[x.role] + '</td>' +
+        '<td class="pr-3">' + (x.h ? '<span class="text-emerald-600 font-semibold">Đã đổi</span>' : '<span class="text-amber-600 font-semibold">Tạm (1234)</span>') + '</td>' +
+        '<td>' + (x.h ? '<button type="button" data-act="resetPw" data-id="' + esc(x.u) + '" class="h-9 px-3 rounded-lg border border-slate-200 text-xs font-semibold whitespace-nowrap">Đặt lại 1234</button>' : '') + '</td></tr>';
+    }));
 }
 
 function dash(el) {
@@ -488,6 +576,8 @@ document.addEventListener('click', function (e) {
     else if (act === 'addCls') clsForm(); else if (act === 'editCls') clsForm(B.by(D.classes, id));
     else if (act === 'delCls') { var c = B.by(D.classes, id); if (B.roster(id).length) { B.toast('Move students out of ' + c.name + ' first'); return; } if (confirm('Delete class ' + c.name + '?')) { D.classes = D.classes.filter(function (x) { return x.id !== id; }); D.schedules = D.schedules.filter(function (x) { return x.classId !== id; }); B.save(); app.refresh(); } }
     else if (act === 'addTea') B.modal('Add teacher', B.field('Name', B.inp('name', 'Mr. ', 'required')) + '<div class="mt-3">' + B.field('Skill', B.inp('skill', 'IELTS')) + '</div>', function (f) { if (f.name.value.trim().length < 3) return 'Name is required'; D.teachers.push({ id: B.uid('t'), name: f.name.value.trim(), skill: f.skill.value.trim(), avatar: ['#2563EB', '#8B5CF6', '#F59E0B', '#0EA5E9', '#10B981'][D.teachers.length % 5] }); B.save(); B.toast('Teacher added'); app.refresh(); });
+    else if (act === 'resetPw') { var Dd = B.db(), x = Dd.users.filter(function (k) { return k.u === id; })[0]; if (x && confirm('Đặt lại mật khẩu của ' + id + ' về 1234?')) { delete x.h; B.save(); B.toast('Đã đặt lại mật khẩu ' + id); app.refresh(); } }
+    else if (act === 'csvAcc') B.csv([['Tên đăng nhập', 'Vai trò', 'Họ tên', 'Mật khẩu']].concat(B.users().map(function (x) { return [x.u, B.ROLE_VI[x.role], x.name, x.h ? '(đã đổi)' : '1234']; })), 'tai-khoan.csv');
     else if (act === 'delZ') { D.zalo = (D.zalo || []).filter(function (z) { return z.id !== id; }); B.save(); B.toast('Đã xóa tin'); app.refresh(); }
     else if (act === 'markPaid') { var p = B.by(D.payments, id); p.status = 'Paid'; p.paidAt = B.iso(today); B.save(); B.toast('Marked as paid'); app.refresh(); }
     else if (act === 'saveAtt') saveAtt();
@@ -507,6 +597,7 @@ document.addEventListener('input', function (e) { if (e.target.hasAttribute && e
 document.addEventListener('change', function (e) {
   var t = e.target;
   if (t.hasAttribute('data-fs')) { fstatus = t.value; app.refresh(); }
+  else if (t.hasAttribute('data-accrole')) { accRole = t.value; app.refresh(); }
   else if (t.hasAttribute('data-attcls')) { attCls = t.value; pending = {}; app.refresh(); }
   else if (t.hasAttribute('data-assign') && t.value) { var c = B.by(D.classes, t.value); c.teacherId = t.getAttribute('data-assign'); B.save(); B.toast(c.name + ' → ' + B.by(D.teachers, c.teacherId).name); app.refresh(); }
 });
@@ -515,7 +606,7 @@ document.addEventListener('dragover', function (e) { var z = e.target.closest &&
 document.addEventListener('dragleave', function (e) { var z = e.target.closest && e.target.closest('[data-drop]'); if (z) z.classList.remove('border-[#2563EB]', 'bg-blue-50'); });
 document.addEventListener('drop', function (e) { var z = e.target.closest && e.target.closest('[data-drop]'); if (z && drag) { e.preventDefault(); move(drag, +z.getAttribute('data-drop')); drag = null; } });
 B.sw('../'); app.route();
-})();
+});
 </script>
 </body>
 </html>

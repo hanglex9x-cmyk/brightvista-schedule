@@ -175,14 +175,16 @@ var BV = (function () {
       '<aside class="hidden lg:flex fixed inset-y-0 left-0 w-[260px] flex-col bg-[#1E3A8A] text-white z-40">' +
       '<a href="' + o.base + 'portal.html" class="flex items-center gap-3 px-6 pt-7 pb-6"><span class="grid place-items-center w-11 h-11 rounded-xl bg-white/15 text-2xl">🎓</span><span><b class="block text-xl tracking-tight">BrightVista</b><span class="text-sm text-blue-200">' + esc(o.brandSub || 'English Center') + '</span></span></a>' +
       '<nav id="bvSide" class="flex-1 px-4 space-y-1 overflow-y-auto" aria-label="Main"></nav>' +
-      '<div class="m-4 p-3 rounded-xl bg-white/10 flex items-center gap-3"><span id="bvAva">' + avatar(o.userName || 'Admin', '#60A5FA', 'w-10 h-10 text-sm') + '</span><div class="min-w-0"><p id="bvUser" class="font-semibold text-sm truncate">' + esc(o.userName || '') + '</p><p id="bvUserSub" class="text-xs text-blue-200 truncate">' + esc(o.userSub || '') + '</p></div></div></aside>' +
+      '<div class="m-4 p-3 rounded-xl bg-white/10 flex items-center gap-3"><span id="bvAva">' + avatar(o.userName || 'Admin', '#60A5FA', 'w-10 h-10 text-sm') + '</span><div class="min-w-0"><p id="bvUser" class="font-semibold text-sm truncate">' + esc(o.userName || '') + '</p><p id="bvUserSub" class="text-xs text-blue-200 truncate">' + esc(o.userSub || '') + '</p></div></div>' +
+      '<div class="flex gap-2 px-4 pb-5"><button type="button" data-chpw class="flex-1 h-9 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold">Đổi mật khẩu</button><button type="button" data-logout class="flex-1 h-9 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold">Đăng xuất</button></div></aside>' +
       '<div class="lg:ml-[260px] min-h-screen pb-24 lg:pb-10">' +
       '<header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-100"><div class="flex items-center gap-3 px-4 lg:px-8 h-14">' +
       '<a href="' + o.base + 'portal.html" class="lg:hidden grid place-items-center w-9 h-9 rounded-lg bg-[#1E3A8A] text-lg">🎓</a>' +
       '<div class="min-w-0 flex-1"><h1 id="bvTitle" class="font-extrabold text-slate-900 truncate"></h1></div>' + (o.picker || '') +
       '<nav class="hidden md:flex items-center gap-1 text-sm" aria-label="Portals">' + P.map(function (p) { var on = p[1].toLowerCase() === o.portal; return '<a href="' + o.base + p[0] + '" class="px-2.5 py-1.5 rounded-lg font-semibold ' + (on ? 'bg-blue-50 text-[#2563EB]' : 'text-slate-500 hover:text-slate-900') + '">' + p[1] + '</a>'; }).join('<span class="text-slate-300">|</span>') + '</nav>' +
       '<details class="md:hidden relative"><summary class="list-none grid place-items-center w-9 h-9 rounded-lg border border-slate-200 text-slate-600" aria-label="Switch portal">⇄</summary><div class="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl border border-slate-100 p-1">' +
-      P.map(function (p) { return '<a href="' + o.base + p[0] + '" class="block px-3 py-2 rounded-lg text-sm font-semibold ' + (p[1].toLowerCase() === o.portal ? 'text-[#2563EB] bg-blue-50' : 'text-slate-700') + '">' + p[1] + '</a>'; }).join('') + '</div></details>' +
+      P.map(function (p) { return '<a href="' + o.base + p[0] + '" class="block px-3 py-2 rounded-lg text-sm font-semibold ' + (p[1].toLowerCase() === o.portal ? 'text-[#2563EB] bg-blue-50' : 'text-slate-700') + '">' + p[1] + '</a>'; }).join('') +
+      '<hr class="my-1 border-slate-100"><button type="button" data-chpw class="block w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-slate-700">Đổi mật khẩu</button><button type="button" data-logout class="block w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-red-600">Đăng xuất</button></div></details>' +
       '</div></header><main id="bvMain" class="px-4 lg:px-8 pt-5 lg:pt-8"><p id="bvSub" class="hidden lg:block text-slate-500 -mt-3 mb-6"></p><div id="bvView"></div></main></div>' +
       '<nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200" style="padding-bottom:env(safe-area-inset-bottom,0px)" aria-label="Bottom"><div id="bvBottom" class="grid grid-cols-' + o.bnav.length + '"></div></nav>' +
       '<div id="bvModal" class="fixed inset-0 z-50 bg-slate-900/50 grid place-items-end sm:place-items-center" hidden role="dialog" aria-modal="true"></div>' +
@@ -204,7 +206,8 @@ var BV = (function () {
       if (changed) window.scrollTo(0, 0);
     }
     window.addEventListener('hashchange', route);
-    document.addEventListener('click', function (e) { var t = e.target; if (t === $('bvModal') || (t.closest && t.closest('[data-close]'))) closeModal(); });
+    document.addEventListener('click', function (e) { var t = e.target; if (t === $('bvModal') || (t.closest && t.closest('[data-close]'))) closeModal();
+      if (t.closest && t.closest('[data-logout]')) logout(o.base); if (t.closest && t.closest('[data-chpw]')) pwModal(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
     return { route: route, refresh: function () { render(cur, $('bvView')); }, current: function () { return cur; }, setUser: function (n, s, col) { $('bvUser').textContent = n; $('bvUserSub').textContent = s; $('bvAva').innerHTML = avatar(n, col || '#60A5FA', 'w-10 h-10 text-sm'); } };
   }
@@ -215,7 +218,7 @@ var BV = (function () {
       '<div class="mt-4">' + body + '</div><p class="bv-msg text-sm mt-3"></p><div class="flex gap-3 mt-4"><button type="button" data-close class="flex-1 h-11 rounded-xl border border-slate-200 font-semibold">Cancel</button><button class="flex-1 h-11 rounded-xl bg-[#2563EB] text-white font-semibold hover:bg-blue-700">Save</button></div></form>';
     m.hidden = false;
     var f = m.querySelector('form'), first = f.querySelector('input,select,textarea'); if (first) setTimeout(function () { first.focus(); }, 30);
-    f.addEventListener('submit', function (e) { e.preventDefault(); var err = onSubmit(f); if (err) f.querySelector('.bv-msg').innerHTML = '<span class="text-red-600 font-semibold">' + esc(err) + '</span>'; else closeModal(); });
+    f.addEventListener('submit', function (e) { e.preventDefault(); var err = onSubmit(f); if (err === 'Đang kiểm tra…') f.querySelector('.bv-msg').textContent = err; else if (err) f.querySelector('.bv-msg').innerHTML = '<span class="text-red-600 font-semibold">' + esc(err) + '</span>'; else closeModal(); });
   }
   function closeModal() { var m = $('bvModal'); if (m) { m.hidden = true; m.innerHTML = ''; } }
   var tt = null;
@@ -251,20 +254,91 @@ var BV = (function () {
     }
     return h + '</div>';
   }
+
+  /* ---------- đăng nhập (demo: kiểm tra trên trình duyệt, mật khẩu băm SHA-256, phiên 12 giờ) ---------- */
+  var SKEY = 'bv_session', SALT = 'brightvista:', HOME = { admin: 'admin/', teacher: 'teacher/', student: 'student/', parent: 'parent/' };
+  var ROLE_VI = { admin: 'Admin', teacher: 'Giáo viên', student: 'Học viên', parent: 'Phụ huynh' };
+  function users() {
+    var D = db(), U = D.users || [], have = {}, add = function (x) { if (!have[x.u]) { U.push(x); have[x.u] = 1; } };
+    U.forEach(function (x) { have[x.u] = 1; });
+    add({ u: 'admin', role: 'admin', name: 'Admin Minh Anh', ref: '' });
+    add({ u: 'nhung', role: 'admin', name: 'Nhung (Admin)', ref: '' });
+    D.teachers.forEach(function (t) { add({ u: t.name.replace(/^(Mr|Ms|Mrs)\.\s*/, '').toLowerCase().replace(/\s+/g, ''), role: 'teacher', name: t.name, ref: t.id }); });
+    D.students.forEach(function (s) { var n = s.id.replace(/\D/g, ''); add({ u: 'hs' + n, role: 'student', name: s.name, ref: s.id }); add({ u: 'ph' + n, role: 'parent', name: (s.parent && s.parent.name) || 'Phụ huynh ' + s.name, ref: s.id }); });
+    if (!D.users || D.users.length !== U.length) { D.users = U; store.set(KEY, D); }
+    return U;
+  }
+  function sha(t) {
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(SALT + t)).then(function (b) { return [].map.call(new Uint8Array(b), function (x) { return (x < 16 ? '0' : '') + x.toString(16); }).join(''); });
+  }
+  var DEF = '';                                        // băm của mật khẩu tạm, tính 1 lần
+  function login(u, p) {
+    u = String(u || '').trim().toLowerCase();
+    var x = users().filter(function (k) { return k.u === u; })[0];
+    return Promise.all([sha(p), DEF ? DEF : sha('1234')]).then(function (h) {
+      DEF = h[1];
+      if (!x || h[0] !== (x.h || DEF)) throw new Error('Sai tên đăng nhập hoặc mật khẩu');
+      var s = { u: x.u, role: x.role, name: x.name, ref: x.ref, t: Date.now(), temp: !x.h };
+      store.set(SKEY, s); return s;
+    });
+  }
+  function session() { var s = store.get(SKEY, null); if (!s || Date.now() - s.t > 12 * 3600000) return null; var x = users().filter(function (k) { return k.u === s.u; })[0]; return x ? s : null; }
+  function logout(base) { store.del(SKEY); location.href = (base || '') + 'portal.html'; }
+  function changePw(oldp, newp) {
+    var s = session(); if (!s) return Promise.reject(new Error('Chưa đăng nhập'));
+    if (String(newp).length < 4) return Promise.reject(new Error('Mật khẩu mới tối thiểu 4 ký tự'));
+    return login(s.u, oldp).then(function () { return sha(newp); }).then(function (h) {
+      var D = db(); D.users.filter(function (k) { return k.u === s.u; })[0].h = h; store.set(KEY, D);
+      s.temp = false; store.set(SKEY, s);
+    });
+  }
+  /** Chặn trang: chưa đăng nhập / sai vai trò → màn hình đăng nhập. Đúng → cb(session). */
+  function requireLogin(roles, base, cb) {
+    var s = session();
+    if (s && roles.indexOf(s.role) >= 0) return cb(s);
+    var wrong = s && roles.indexOf(s.role) < 0;
+    document.body.insertAdjacentHTML('afterbegin', '<div id="bvLogin" class="fixed inset-0 z-[70] grid place-items-center bg-[#1E3A8A] px-4 overflow-y-auto">' +
+      '<form class="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 my-8 text-slate-800 fade"><div class="text-center"><div class="mx-auto grid place-items-center w-14 h-14 rounded-2xl bg-[#2563EB] text-3xl">🎓</div>' +
+      '<h1 class="mt-3 text-2xl font-extrabold">BrightVista</h1><p class="text-sm text-slate-500">Đăng nhập ' + roles.map(function (r) { return ROLE_VI[r]; }).join(' / ') + '</p></div>' +
+      (wrong ? '<p class="mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm px-3 py-2">Tài khoản <b>' + esc(s.u) + '</b> (' + ROLE_VI[s.role] + ') không vào được trang này. <a class="font-bold underline" href="' + base + HOME[s.role] + '">Về trang của bạn</a></p>' : '') +
+      '<label class="block text-sm font-medium mt-5">Tên đăng nhập<input name="u" autocomplete="username" autocapitalize="none" required class="mt-1 w-full h-12 rounded-xl border border-slate-200 px-3"></label>' +
+      '<label class="block text-sm font-medium mt-3">Mật khẩu<input name="p" type="password" autocomplete="current-password" required class="mt-1 w-full h-12 rounded-xl border border-slate-200 px-3"></label>' +
+      '<p class="bv-err text-sm text-red-600 font-semibold mt-3" role="alert"></p><button class="mt-2 w-full h-12 rounded-xl bg-[#2563EB] text-white font-bold">Đăng nhập</button>' +
+      '<p class="text-xs text-slate-400 text-center mt-4">Tài khoản do trung tâm cấp. Quên mật khẩu: liên hệ Admin.</p></form></div>');
+    var f = document.querySelector('#bvLogin form');
+    setTimeout(function () { f.u.focus(); }, 30);
+    f.addEventListener('submit', function (e) {
+      e.preventDefault(); f.querySelector('.bv-err').textContent = '';
+      login(f.u.value, f.p.value).then(function (s2) {
+        if (roles.indexOf(s2.role) < 0) { location.href = base + HOME[s2.role]; return; }
+        location.reload();
+      }).catch(function (err) { f.querySelector('.bv-err').textContent = err.message; f.p.value = ''; f.p.focus(); });
+    });
+  }
+  function pwModal() {
+    var s = session(); if (!s) return;
+    modal('Đổi mật khẩu – ' + s.u, field('Mật khẩu hiện tại', inp('o', '', 'type="password" required autocomplete="current-password"')) + '<div class="mt-3">' + field('Mật khẩu mới', inp('n', '', 'type="password" required minlength="4" autocomplete="new-password"')) + '</div>' +
+      '<p class="text-xs text-slate-500 mt-3">Bản demo: mật khẩu mới lưu trên trình duyệt của máy này.</p>', function (f) {
+      changePw(f.o.value, f.n.value).then(function () { closeModal(); toast('Đã đổi mật khẩu'); }).catch(function (e) { var m = document.querySelector('#bvModal .bv-msg'); if (m) m.innerHTML = '<span class="text-red-600 font-semibold">' + esc(e.message) + '</span>'; });
+      return 'Đang kiểm tra…';
+    });
+  }
+
   function sw(base) { if ('serviceWorker' in navigator && location.protocol === 'https:') window.addEventListener('load', function () { navigator.serviceWorker.register(base + 'sw.js', { scope: base }).catch(function () { }); }); }
 
   return { db: db, save: save, reset: reset, by: by, uid: uid, sessions: sessions, roster: roster, attOf: attOf, presentCount: presentCount, setAttendance: setAttendance, rateOf: rateOf,
     iso: iso, parse: parse, addD: addD, monOf: monOf, tm: tm, esc: esc, MON: MON, WD: WD, TYPE: TYPE, ROOMS: ROOMS, store: store,
     svg: svg, avatar: avatar, ini: ini, weekLabel: weekLabel, money: money, $: $, layout: layout, skeleton: skeleton, modal: modal, closeModal: closeModal, toast: toast, csv: csv,
-    field: field, inp: inp, sel: sel, card: card, stat: stat, chip: chip, weekGrid: weekGrid, sw: sw };
+    field: field, inp: inp, sel: sel, card: card, stat: stat, chip: chip, weekGrid: weekGrid, sw: sw,
+    users: users, login: login, session: session, logout: logout, requireLogin: requireLogin, pwModal: pwModal, ROLE_VI: ROLE_VI };
 })();
 </script>
 <script>
-(function () {
+BV.requireLogin(['student', 'admin'], '../', function (SS) {
 'use strict';
 var B = BV, esc = B.esc, D = B.db(), today = new Date(), w0 = B.monOf(today);
-var me = B.store.get('bv_student', D.students[0].id); if (!B.by(D.students, me)) me = D.students[0].id;
-var picker = '<select id="who" class="h-9 max-w-[45%] sm:max-w-none rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold" aria-label="Student">' + D.students.map(function (s) { return '<option value="' + s.id + '"' + (s.id === me ? ' selected' : '') + '>' + esc(s.name) + '</option>'; }).join('') + '</select>';
+var me = SS.role === 'student' ? SS.ref : B.store.get('bv_student', D.students[0].id); if (!B.by(D.students, me)) me = D.students[0].id;
+var picker = SS.role !== 'admin' ? '' : '<select id="who" class="h-9 max-w-[45%] sm:max-w-none rounded-lg border border-slate-200 bg-white px-2 text-sm font-semibold" aria-label="Student">' + D.students.map(function (s) { return '<option value="' + s.id + '"' + (s.id === me ? ' selected' : '') + '>' + esc(s.name) + '</option>'; }).join('') + '</select>';
 var app = B.layout({ base: '../', portal: 'student', brandSub: 'Student Portal', picker: picker,
   nav: [['schedule', 'My Schedule', 'cal'], ['attendance', 'Attendance', 'att'], ['homework', 'Homework', 'hw'], ['fees', 'Fees', 'pay']],
   bnav: [['home', 'Home', 'home'], ['schedule', 'Schedule', 'cal'], ['attendance', 'Attend', 'att'], ['homework', 'Homework', 'hw'], ['fees', 'Fees', 'pay']],
@@ -303,7 +377,7 @@ document.addEventListener('change', function (e) {
   var h = e.target.getAttribute && e.target.getAttribute('data-hw'); if (h) { var m = B.store.get('bv_hw_' + me, {}); m[h] = e.target.checked; B.store.set('bv_hw_' + me, m); app.refresh(); }
 });
 B.sw('../'); app.route();
-})();
+});
 </script>
 </body>
 </html>
