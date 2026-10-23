@@ -264,10 +264,10 @@ var BV = (function () {
 'use strict';
 var B = BV, esc = B.esc, D = B.db(), today = new Date(), w0 = B.monOf(today), q = '', fstatus = '';
 var app = B.layout({ base: '../', portal: 'admin', brandSub: 'Admin Portal', userName: 'Admin Minh Anh', userSub: 'minhanh@brightvista.edu',
-  nav: [['dashboard', 'Dashboard', 'dash'], ['students', 'Students', 'stu'], ['classes', 'Classes', 'cls'], ['teachers', 'Teachers', 'tea'], ['schedule', 'Schedule', 'cal'], ['rooms', 'Rooms', 'room'], ['attendance', 'Attendance', 'att'], ['payments', 'Payments', 'pay'], ['reports', 'Reports', 'rep']],
-  bnav: [['dashboard', 'Home', 'home'], ['students', 'Students', 'stu'], ['schedule', 'Schedule', 'cal'], ['attendance', 'Attend', 'att'], ['payments', 'Fees', 'pay']],
+  nav: [['dashboard', 'Dashboard', 'dash'], ['students', 'Students', 'stu'], ['classes', 'Classes', 'cls'], ['teachers', 'Teachers', 'tea'], ['schedule', 'Schedule', 'cal'], ['rooms', 'Rooms', 'room'], ['attendance', 'Attendance', 'att'], ['zalo', 'Nhật ký Zalo', 'chat'], ['payments', 'Payments', 'pay'], ['reports', 'Reports', 'rep']],
+  bnav: [['dashboard', 'Home', 'home'], ['students', 'Students', 'stu'], ['schedule', 'Schedule', 'cal'], ['zalo', 'Zalo', 'chat'], ['payments', 'Fees', 'pay']],
   subs: { dashboard: 'Overview of revenue, unpaid fees, classes and rooms.', students: 'Add, edit, delete students – saved instantly.', classes: 'Create classes, assign teacher and room.', teachers: 'Teachers and their weekly load.',
-    schedule: 'Drag a class block to another day to reschedule.', rooms: 'Live room status for today.', attendance: 'Student × date grid – tick and bulk save.', payments: 'Track Paid / Unpaid / Overdue fees.', reports: 'Export attendance and revenue (CSV opens in Excel).' },
+    schedule: 'Drag a class block to another day to reschedule.', rooms: 'Live room status for today.', attendance: 'Student × date grid – tick and bulk save.', payments: 'Track Paid / Unpaid / Overdue fees.', zalo: 'Mỗi tin Zalo = 1 lần lưu. HV nghỉ / GV hủy lớp tự cập nhật điểm danh các buổi đó.', reports: 'Export attendance and revenue (CSV opens in Excel).' },
   render: render });
 function cls(id) { return B.by(D.classes, id) || { name: '—', type: 'IELTS', level: '', fee: 0 }; }
 function tea(id) { return B.by(D.teachers, id) || { name: '—', avatar: '#64748B' }; }
@@ -279,13 +279,51 @@ function btn(act, label, icon, cls2) { return '<button type="button" data-act="'
 function table(head, rows, empty) { return B.card('<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-slate-500 border-b">' + head.map(function (h) { return '<th class="py-2 pr-3 font-semibold whitespace-nowrap">' + h + '</th>'; }).join('') + '</tr></thead><tbody>' + (rows.join('') || '<tr><td class="py-6 text-center text-slate-400" colspan="' + head.length + '">' + (empty || 'No data') + '</td></tr>') + '</tbody></table></div>', 'p-4'); }
 function match(s) { return !q || s.toLowerCase().indexOf(q) >= 0; }
 
-function render(v, el) { ({ dashboard: dash, students: students, classes: classes, teachers: teachers, schedule: schedule, rooms: rooms, attendance: attendance, payments: payments, reports: reports })[v](el); }
+function render(v, el) { ({ zalo: zalo, dashboard: dash, students: students, classes: classes, teachers: teachers, schedule: schedule, rooms: rooms, attendance: attendance, payments: payments, reports: reports })[v](el); }
+
+var ZTYPES = [['HV nghỉ không tính phí HV và GV', 'Absent'], ['HV nghỉ tính phí GV và HV', 'Absent'], ['HV nghỉ chưa rõ phí', 'Absent'], ['GV hủy lớp (chọn HV)', 'Absent'], ['GV hủy lớp all', 'Absent'],
+  ['Học bù', ''], ['Đổi giờ/GV 1 buổi', ''], ['Học thiếu giờ', 'Late'], ['Bảo lưu', ''], ['Kết thúc sớm/Hủy khóa', ''], ['Nghỉ lễ', 'Absent'], ['Tái khóa (ghi nhận)', ''], ['Khác (ghi chú)', '']];
+function zalo(el) {
+  D.zalo = D.zalo || [];
+  el.innerHTML = B.card('<form id="zForm" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">' +
+    B.field('Loại sự kiện *', B.sel('type', ZTYPES.map(function (t) { return t[0]; }), ZTYPES[0][0]), 'sm:col-span-2') +
+    B.field('Học viên', B.sel('sid', [['', '— chọn học viên —']].concat(D.students.map(function (s) { return [s.id, s.name + ' · ' + cls(s['class']).name]; })), '')) +
+    B.field('Giáo viên', B.sel('tid', [['', '— chỉ cho GV hủy lớp all —']].concat(D.teachers.map(function (t) { return [t.id, t.name]; })), '')) +
+    B.field('Từ ngày *', B.inp('from', B.iso(today), 'type="date" required')) + B.field('Đến ngày', B.inp('to', '', 'type="date"')) +
+    B.field('Người gửi', B.inp('who', '')) + B.field('Ghi chú', B.inp('note', '')) +
+    '<label class="block text-sm font-medium sm:col-span-2 lg:col-span-4">Nội dung tin Zalo (dán nguyên văn)<textarea name="text" rows="3" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2"></textarea></label>' +
+    '<div class="sm:col-span-2 lg:col-span-4 flex flex-wrap items-center gap-3"><button class="h-11 px-5 rounded-xl bg-[#2563EB] text-white font-semibold">Lưu vào nhật ký</button><span id="zMsg" class="text-sm"></span></div></form>') +
+    '<h2 class="font-bold mt-6 mb-3">' + D.zalo.length + ' tin đã ghi</h2>' +
+    table(['Ngày nhận', 'Loại', 'Học viên / GV', 'Từ – đến', 'Nội dung', ''], D.zalo.slice().reverse().slice(0, 80).map(function (z) {
+      var s = z.sid && B.by(D.students, z.sid), t = z.tid && B.by(D.teachers, z.tid);
+      return '<tr class="border-b border-slate-50 align-top"><td class="py-2 pr-3 whitespace-nowrap">' + z.recv + '</td><td class="pr-3">' + esc(z.type) + '</td><td class="pr-3 whitespace-nowrap">' + esc(s ? s.name : t ? t.name : '–') + '</td><td class="pr-3 whitespace-nowrap">' + z.from + (z.to && z.to !== z.from ? ' → ' + z.to : '') + '</td><td class="pr-3 text-slate-600">' + esc(z.text || z.note || '') + '</td>' +
+        '<td><button type="button" data-act="delZ" data-id="' + z.id + '" class="p-2 rounded-lg hover:bg-red-50 text-red-600" aria-label="Xóa">' + B.svg('del', 'w-4 h-4') + '</button></td></tr>';
+    }), 'Chưa có tin nào');
+  document.getElementById('zForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, type = f.type.value, sid = f.sid.value, tid = f.tid.value, from = f.from.value, to = f.to.value || from, msg = document.getElementById('zMsg');
+    var need = ZTYPES.filter(function (t) { return t[0] === type; })[0][1];
+    if (type === 'GV hủy lớp all' ? !tid : (type !== 'Nghỉ lễ' && type.indexOf('Khác') < 0 && !sid)) { msg.innerHTML = '<span class="text-red-600 font-semibold">' + (type === 'GV hủy lớp all' ? 'Chọn giáo viên' : 'Chọn học viên') + '</span>'; return; }
+    if (to < from) { msg.innerHTML = '<span class="text-red-600 font-semibold">Đến ngày phải sau Từ ngày</span>'; return; }
+    D.zalo.push({ id: B.uid('z'), recv: B.iso(today), type: type, sid: sid, tid: tid, from: from, to: to, who: f.who.value.trim(), note: f.note.value.trim(), text: f.text.value.trim() });
+    var n = 0;
+    if (need) B.sessions(B.parse(from), B.parse(to)).forEach(function (se) {
+      var all = type === 'Nghỉ lễ' || (type === 'GV hủy lớp all' && se.teacherId === tid);
+      B.roster(se.classId).filter(function (st) { return all || st.id === sid; }).forEach(function (st) {
+        D.attendance = D.attendance.filter(function (a) { return !(a.date === se.date && a.studentId === st.id && a.classId === se.classId); });
+        D.attendance.push({ id: B.uid('a'), studentId: st.id, scheduleId: se.scheduleId, classId: se.classId, date: se.date, status: need, note: type }); n++;
+      });
+    });
+    B.save(); B.toast('Đã lưu tin Zalo' + (n ? ' – cập nhật ' + n + ' điểm danh' : '')); app.refresh();
+  });
+}
 
 function dash(el) {
   var m = curMonth(), P = D.payments.filter(function (p) { return p.month === m; });
   var rev = P.filter(function (p) { return p.status === 'Paid'; }).reduce(function (s, p) { return s + p.amount; }, 0), unpaid = P.filter(function (p) { return p.status !== 'Paid'; });
   var w = B.sessions(w0, B.addD(w0, 6)), rate = B.rateOf(D.attendance);
-  el.innerHTML = '<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">' + B.stat('Revenue this month', B.money(rev), P.filter(function (p) { return p.status === 'Paid'; }).length + ' payments received', true, 'pay') +
+  el.innerHTML = '<div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 text-sm px-4 py-3">⚠️ Bản demo, dữ liệu giả lưu trong trình duyệt. Hệ thống thật (Google Sheet: Nhật ký Zalo, chấm công, slot): <a href="../app/admin/" class="font-bold underline">ADMIN Web App</a></div>' +
+    '<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5">' + B.stat('Revenue this month', B.money(rev), P.filter(function (p) { return p.status === 'Paid'; }).length + ' payments received', true, 'pay') +
     B.stat('Unpaid', unpaid.length, B.money(unpaid.reduce(function (s, p) { return s + p.amount; }, 0)) + ' outstanding', false, 'pay') + B.stat('Classes this week', w.length, D.classes.length + ' courses', false, 'cal') + B.stat('Attendance rate', rate + '%', D.attendance.length + ' records', false, 'att') + '</div>' +
     '<div class="grid lg:grid-cols-3 gap-5 mt-6"><div class="lg:col-span-2">' + B.card('<div class="flex items-center justify-between mb-3"><h2 class="font-bold">This week · ' + B.weekLabel(w0) + '</h2><a href="#schedule" class="text-sm font-semibold text-[#2563EB]">Edit schedule →</a></div>' + B.weekGrid(w, w0)) + '</div>' +
     '<div class="space-y-5">' + B.card('<h2 class="font-bold mb-3">Unpaid / overdue</h2>' + (unpaid.slice(0, 8).map(function (p) { var s = B.by(D.students, p.studentId); return '<div class="flex items-center justify-between py-2 border-b border-slate-50 gap-2"><span class="flex items-center gap-2 min-w-0">' + B.avatar(s.name, s.avatar, 'w-8 h-8 text-[10px]') + '<span class="text-sm truncate">' + esc(s.name) + '</span></span>' + badge(p.status) + '</div>'; }).join('') || '<p class="text-sm text-slate-400">All paid 🎉</p>')) +
@@ -450,6 +488,7 @@ document.addEventListener('click', function (e) {
     else if (act === 'addCls') clsForm(); else if (act === 'editCls') clsForm(B.by(D.classes, id));
     else if (act === 'delCls') { var c = B.by(D.classes, id); if (B.roster(id).length) { B.toast('Move students out of ' + c.name + ' first'); return; } if (confirm('Delete class ' + c.name + '?')) { D.classes = D.classes.filter(function (x) { return x.id !== id; }); D.schedules = D.schedules.filter(function (x) { return x.classId !== id; }); B.save(); app.refresh(); } }
     else if (act === 'addTea') B.modal('Add teacher', B.field('Name', B.inp('name', 'Mr. ', 'required')) + '<div class="mt-3">' + B.field('Skill', B.inp('skill', 'IELTS')) + '</div>', function (f) { if (f.name.value.trim().length < 3) return 'Name is required'; D.teachers.push({ id: B.uid('t'), name: f.name.value.trim(), skill: f.skill.value.trim(), avatar: ['#2563EB', '#8B5CF6', '#F59E0B', '#0EA5E9', '#10B981'][D.teachers.length % 5] }); B.save(); B.toast('Teacher added'); app.refresh(); });
+    else if (act === 'delZ') { D.zalo = (D.zalo || []).filter(function (z) { return z.id !== id; }); B.save(); B.toast('Đã xóa tin'); app.refresh(); }
     else if (act === 'markPaid') { var p = B.by(D.payments, id); p.status = 'Paid'; p.paidAt = B.iso(today); B.save(); B.toast('Marked as paid'); app.refresh(); }
     else if (act === 'saveAtt') saveAtt();
     else if (act === 'allP') { var el = document.getElementById('bvView'); (el._past || []).forEach(function (s) { B.roster(attCls).forEach(function (st) { pending[s.id + '|' + st.id] = 'Present'; }); }); app.refresh(); }
