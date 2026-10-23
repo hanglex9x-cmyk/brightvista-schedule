@@ -1,0 +1,17 @@
+{
+  "name": "Bright Vista – Lịch học",
+  "short_name": "Bright Vista",
+  "description": "Cổng vào hệ thống lịch học Bright Vista: ADMIN, Teacher View, CTV VIEW.",
+  "lang": "vi",
+  "start_url": "./portal.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0A0A0A",
+  "theme_color": "#2563EB",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
