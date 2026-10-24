@@ -381,6 +381,19 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <li>Bấm <b>Kiểm tra trùng</b> → <b>Lưu lịch mới</b>.</li>
   </ol>
   <div class="callout info"><div class="ic">i</div><p>Lịch cũ vẫn giữ cho các buổi trước ngày đó nên chấm công tháng cũ không bị sai. Chỉ đổi <b>1 buổi</b> thì dùng Nhật ký Zalo, loại “Đổi giờ/GV 1 buổi”.</p></div>
+  <h3>Ví dụ từng bước: đổi giáo viên từ một ngày</h3>
+  <p><b>Tin Zalo:</b> <i>“Đổi lịch: Huỳnh Tuệ Lâm đổi về cô Kristine học giao tiếp theo lịch 14h30 T7. Bắt đầu từ T7 24/10.”</i></p>
+  <ol class="steps plain">
+    <li><b>Đọc tin, tách 3 thông tin</b>: học viên = Huỳnh Tuệ Lâm (HV0004-1, đang học cô Jen T7 14:30) · lịch mới = <b>T7 · 14:30 · Kristine</b> · áp dụng từ <b>24/10/2026</b>. “Bắt đầu từ… / từ nay” = đổi hẳn → dùng <b>Đổi lịch cố định</b>; “1 buổi duy nhất” mới dùng Đổi giờ/GV 1 buổi.</li>
+    <li><b>Kiểm tra GV mới còn trống</b>: tab <a href="#gio-trong" data-go="gio-trong">Giờ trống GV</a> → dòng Kristine, cột T7 phải có 14:30 (buổi 56 phút cần thêm mốc 15:00).</li>
+    <li><b>Mở khóa</b>: tab Học viên / Tạo khóa → Tra cứu gõ <code>Tuệ Lâm</code> → bấm mã <b>HV0004-1</b>.</li>
+    <li><b>Đổi lịch cố định từ 1 ngày</b> → Áp dụng từ ngày <b>24/10/2026</b> → nhập <b>toàn bộ</b> lịch mới (mỗi buổi/tuần 1 dòng, kể cả buổi không đổi): T7 · 14:30 · Kristine. Học viên có 2–3 buổi/tuần thì nhập đủ các dòng, bấm ✕ xóa dòng thừa.</li>
+    <li><b>Kiểm tra trùng</b>: “✔ Không trùng” → bấm <b>Lưu lịch mới</b>. Báo trùng / ngoài giờ rảnh → dừng, hỏi trung tâm hoặc GV.</li>
+    <li><b>Lưu tin Zalo</b>: Nhật ký Zalo → loại <b>Khác (ghi chú)</b> → chọn khóa → Từ ngày 24/10 → dán nguyên tin → Lưu.</li>
+    <li><b>Kiểm tra lại</b>: Lịch tuần GV chọn Kristine → T7 24/10 có Tuệ Lâm; chọn Jen → không còn. Kiểm tra tuần không có dòng đỏ mới.</li>
+  </ol>
+  <div class="callout info"><div class="ic">i</div><p>Sau khi lưu: dòng cũ (T7 Jen) tự có <b>Đến ngày 23/10</b>, dòng mới (T7 Kristine) áp dụng từ 24/10. Buổi đã học với cô Jen giữ nguyên nên chấm công và slot cô Jen không đổi. Cách nhanh trên hệ thống đăng nhập: <a href="#keo-tha" data-go="keo-tha">Kéo-thả lịch</a> → bấm thẻ Tuệ Lâm T7 → GV = Kristine → <b>Từ tuần này trở đi</b> → Lưu.</p></div>
+  <div class="callout warn"><div class="ic">!</div><p><b>Đổi loại lớp</b> (ví dụ PRE-IELTS → học giao tiếp): hỏi trung tâm <b>thời lượng</b> có đổi không (đổi thì điền ô “phút (nếu khác)” ở bước 4) và GV tính đơn giá loại nào. Tính theo ESL: sau khi lưu, mở tab <b>LICH_CO_DINH</b> trên Sheet → dòng mới của khóa → cột <b>Lớp riêng</b> ghi <code>ESL</code>.</p></div>
 </section>
 
 <section class="sec" id="zalo" data-g="input" data-t="Nhật ký Zalo">
