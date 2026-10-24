@@ -347,7 +347,7 @@ VIEWS.zalo = function(){
     '<label>Thời lượng thực học (phút – Học thiếu giờ)<input id="eDur" type="number" min="1" max="120"></label>'+
     '<label>Người gửi<input id="eWho"></label><label>Ngày nhận<input id="eRecv" type="date" value="'+S.today+'"></label></div>'+
     '<div id="eHelp" class="msg warn"></div><label class="small">Nội dung tin Zalo (dán nguyên văn)</label><textarea id="eText"></textarea>'+
-    '<div class="bar" style="margin-top:8px"><button class="btn" id="eSave">Lưu vào nhật ký</button></div><div id="eMsg"></div></div>'+
+    '<div class="bar" style="margin-top:8px"><button class="btn" id="eSave">Lưu vào nhật ký</button><button class="btn g hide" id="eCancel">Hủy sửa</button><span id="eEditing" class="small"></span></div><div id="eMsg"></div></div>'+
     '<div class="card"><b>80 tin gần nhất</b><div id="eList" class="loading">…</div></div>';
   var help=function(){ $('eHelp').textContent=EV_HELP[$('eType').value]||''; };
   $('eType').onchange=help; help();
@@ -355,16 +355,35 @@ VIEWS.zalo = function(){
   $('eFind').oninput=function(){ clearTimeout(t); t=setTimeout(function(){
     call('api_courses',$('eFind').value).then(function(r){ $('eId').innerHTML=r.slice(0,30).map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.id+' '+c.name+' – '+c.lich+' – '+c.status)+'</option>';}).join(''); });
   },350); };
+  var edit=null;   // tin đang sửa (null = đang thêm mới)
+  var endEdit=function(){ edit=null; $('eSave').textContent='Lưu vào nhật ký'; $('eCancel').classList.add('hide'); $('eEditing').textContent=''; };
+  $('eCancel').onclick=function(){ endEdit(); $('eText').value=''; msg('eMsg','Đã hủy sửa.','warn'); };
   $('eSave').onclick=function(){
     var f={type:$('eType').value,id:$('eId').value,gv:$('eGv').value,from:$('eFrom').value,to:$('eTo').value,newTime:$('eTime').value,newGv:$('eNewGv').value,dur:$('eDur').value,who:$('eWho').value,recv:$('eRecv').value,text:$('eText').value};
     if(f.type==='Nghỉ lễ'||f.type==='GV hủy lớp all') f.id='';
     $('eSave').disabled=true;
-    call('api_addEvent',f).then(function(){ $('eSave').disabled=false; msg('eMsg','Đã lưu. Lịch tuần, chấm công, slot tự tính lại.'); $('eText').value=''; list(); })
+    var p=edit?call('api_updateEvent',edit._row,{type:edit.type,id:edit.id,from:edit.from,text:edit.text},f):call('api_addEvent',f);
+    p.then(function(){ $('eSave').disabled=false; msg('eMsg',(edit?'Đã sửa tin. ':'Đã lưu. ')+'Lịch tuần, chấm công, slot tự tính lại.'); endEdit(); $('eText').value=''; list(); })
       .catch(function(e){ $('eSave').disabled=false; msg('eMsg',e.message,'err'); });
   };
+  var startEdit=function(e){
+    edit=e; $('eType').value=e.type; help();
+    $('eId').innerHTML='<option value="'+esc(e.id)+'">'+esc(e.id)+'</option>'; $('eFind').value='';
+    $('eGv').value=e.gv||''; $('eFrom').value=e.from||''; $('eTo').value=e.to||''; $('eTime').value=e.newTime||''; $('eNewGv').value=e.newGv||'';
+    $('eDur').value=e.dur||''; $('eWho').value=e.who||''; $('eRecv').value=e.recv||''; $('eText').value=e.text||'';
+    $('eSave').textContent='Lưu thay đổi'; $('eCancel').classList.remove('hide'); $('eEditing').textContent='Đang sửa tin ngày '+vn(e.recv)+' (dòng '+e._row+' trên Sheet)';
+    window.scrollTo(0,0);
+  };
   var list=function(){ call('api_events').then(function(r){
-    $('eList').innerHTML='<div class="scroll" style="max-height:50vh"><table><tr><th>Nhận</th><th>Loại</th><th>Khóa / GV</th><th>Từ</th><th>Đến</th><th>Nội dung</th></tr>'+
-      r.map(function(e){return '<tr><td>'+vn(e.recv)+'</td><td>'+esc(e.type)+'</td><td>'+esc(e.id||e.gv)+'</td><td>'+vn(e.from)+'</td><td>'+vn(e.to)+'</td><td class="small">'+esc(e.text)+'</td></tr>';}).join('')+'</table></div>';
+    S.evList=r;
+    $('eList').innerHTML='<div class="scroll" style="max-height:50vh"><table><tr><th>Nhận</th><th>Loại</th><th>Khóa / GV</th><th>Từ</th><th>Đến</th><th>Nội dung</th><th></th></tr>'+
+      r.map(function(e,i){return '<tr><td>'+vn(e.recv)+'</td><td>'+esc(e.type)+'</td><td>'+esc(e.id||e.gv)+'</td><td>'+vn(e.from)+'</td><td>'+vn(e.to)+'</td><td class="small">'+esc(e.text)+'</td>'+
+        '<td style="white-space:nowrap"><button class="btn g" data-ed="'+i+'">Sửa</button> <button class="btn g" data-del="'+i+'" style="color:var(--red);border-color:var(--red)">Xóa</button></td></tr>';}).join('')+'</table></div>';
+    [].forEach.call($('eList').querySelectorAll('[data-ed]'),function(b){ b.onclick=function(){ startEdit(S.evList[+b.dataset.ed]); }; });
+    [].forEach.call($('eList').querySelectorAll('[data-del]'),function(b){ b.onclick=function(){ var e=S.evList[+b.dataset.del];
+      if(!confirm('Xóa hẳn tin này?\n\n'+vn(e.recv)+' · '+e.type+' · '+(e.id||e.gv)+'\n'+e.text)) return;
+      b.disabled=true; call('api_deleteEvent',e._row,{type:e.type,id:e.id,from:e.from,text:e.text}).then(function(){ if(edit&&edit._row===e._row) endEdit(); msg('eMsg','Đã xóa tin. Lịch tự tính lại.'); list(); })
+        .catch(function(x){ b.disabled=false; msg('eMsg',x.message,'err'); }); }; });
   }); };
   list();
 };
