@@ -474,7 +474,21 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <li>Bấm <b>Lưu giáo viên</b>. Web App báo “Đã thêm GV … · thêm N khung giờ rảnh”.</li>
     <li><b>Danh sách giáo viên</b>: giờ rảnh của từng GV. GV chưa khai giờ rảnh hiện chữ <span style="color:var(--red);font-weight:700">chưa có</span>.</li>
   </ol>
-  <div class="callout warn"><div class="ic">!</div><p>Web App chỉ <b>thêm</b>. Muốn <b>sửa / xóa</b> GV hoặc giờ rảnh (GV nghỉ việc, đổi giờ làm): vào tab <b>GIAO_VIEN</b>, <b>GIO_RANH</b> trên Google Sheet. Giờ “Từ” phải trước giờ “Đến”, không thì Web App báo lỗi.</p></div>
+  <h3>Sửa, nghỉ việc, xóa giáo viên</h3>
+  <p>Mỗi dòng trong <b>Danh sách giáo viên</b> có nút:</p>
+  <div class="tbl"><table>
+    <tr><th>Nút</th><th>Dùng khi</th><th>Làm gì</th></tr>
+    <tr><td><b>Sửa</b></td><td>GV đổi giờ rảnh, đổi màu, có đơn giá mới</td><td>Nạp GV lên form phía trên. Sửa nhóm, màu, giờ làm, đơn giá; danh sách <b>giờ rảnh trên form thay toàn bộ giờ rảnh cũ</b> (bỏ dòng nào = bỏ khung đó). Bấm <b>Lưu thay đổi</b>. Tên GV không đổi được (tên gắn với lịch đã học).</td></tr>
+    <tr><td><b>Nghỉ việc</b></td><td>GV thôi dạy từ 1 ngày</td><td>Nhập ngày nghỉ việc (dd/mm/yyyy). Từ ngày đó GV biến khỏi ô chọn GV, Lưới theo ngày, Giờ trống; giờ rảnh và tài khoản đăng nhập của GV bị xóa. <b>Lịch, chấm công, slot các ngày trước giữ nguyên</b> để tính lương tháng đó. Dòng GV chuyển màu xám.</td></tr>
+    <tr><td><b>Đi làm lại</b></td><td>GV đã nghỉ quay lại dạy</td><td>Bỏ ngày nghỉ việc; sau đó bấm <b>Sửa</b> nhập giờ rảnh, tab <b>Tài khoản</b> thêm lại tài khoản GV.</td></tr>
+    <tr><td><b>Xóa</b></td><td>Chỉ GV <b>nhập nhầm</b>, chưa có lớp</td><td>Xóa hẳn GV. GV đã có lớp / học thử / nhật ký thì hệ thống không cho xóa (sẽ làm sai chấm công, slot cũ) → dùng Nghỉ việc.</td></tr>
+  </table></div>
+  <ol class="steps plain">
+    <li><b>Quy trình GV nghỉ việc</b>: bấm <b>Nghỉ việc</b>, nhập ngày. Nếu hệ thống báo “còn N lớp từ …: HVxxxx T2 18:00 (tên HV)…” thì chuyển từng lớp sang GV mới trước: Học viên → bấm mã khóa → <b>Đổi lịch cố định</b> từ ngày đó (hoặc Kéo-thả lịch → <b>Từ tuần này trở đi</b>). Học thử thì sửa GV ở tab HOC_THU.</li>
+    <li>Chuyển hết lớp → bấm <b>Nghỉ việc</b> lại → hệ thống báo “Đã ghi … nghỉ việc từ …”.</li>
+    <li>Mở <b>Kiểm tra tuần</b> các tuần sau: không còn dòng đỏ.</li>
+  </ol>
+  <div class="callout info"><div class="ic">i</div><p>Ngày nghỉ việc lưu ở cột <b>I – Nghỉ việc từ ngày</b> của tab GIAO_VIEN. Giờ “Từ” phải trước giờ “Đến”, không thì hệ thống báo lỗi.</p></div>
 </section>
 
 <section class="sec" id="keo-tha" data-g="input" data-t="Kéo-thả lịch">

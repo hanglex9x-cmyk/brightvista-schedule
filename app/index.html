@@ -100,7 +100,7 @@ function color(gv){ var t=S.teachers.filter(function(x){return x.name===gv;})[0]
   var PALF=['#F8CBAD','#A9D08E','#9DC3E6','#FFE699','#C6E0B4','#F4B6C2','#B4C6E7','#FFD7A8','#A8D5BA','#BFE3DD']; var s=String(gv||''), h=0;
   for(var i=0;i<s.length;i++) h+=s.charCodeAt(i)*(i+1);
   return PALF[h%PALF.length]; }
-function gvOptions(sel, all){ return (all?'<option value="">'+(MODE==='gv'?'— all teachers —':'— tất cả GV —')+'</option>':'<option value=""></option>')+S.teachers.map(function(t){return '<option'+(t.name===sel?' selected':'')+'>'+esc(t.name)+'</option>';}).join(''); }
+function gvOptions(sel, all){ return (all?'<option value="">'+(MODE==='gv'?'— all teachers —':'— tất cả GV —')+'</option>':'<option value=""></option>')+S.teachers.filter(function(t){ return t.name===sel || !(t.off && t.off<=S.today); }).map(function(t){return '<option'+(t.name===sel?' selected':'')+'>'+esc(t.name)+'</option>';}).join(''); }
 function cls(x){ return x.type==='Test 1'?'t-Test1':x.type==='Test 2 -Final'?'t-Test2':x.type==='Trial'?'t-Trial':x.type==='Nghỉ'?'t-Nghi':x.type==='Kết thúc sớm'?'t-KT':x.type==='Học bù'?'t-HB':''; }
 function msg(el, text, kind){ $(el).innerHTML='<div class="msg '+(kind||'ok')+'">'+esc(text)+'</div>'; }
 function fail(e){ $('main').innerHTML='<div class="msg err">Lỗi: '+esc(e && e.message || e)+'</div>'; }
@@ -492,13 +492,30 @@ VIEWS.gvs = function(){
     '<label>Đơn giá ESL (peso/slot 30\')<input id="vPE" type="number"></label><label>Đơn giá PRE-IELTS<input id="vPP" type="number"></label>'+
     '<label>Đơn giá IELTS<input id="vPI" type="number"></label><label>Đơn giá Trial (/buổi)<input id="vPT" type="number"></label></div>'+
     '<div style="margin-top:10px"><b>Giờ rảnh</b> <span class="small">mỗi dòng = 1 khung giờ trong 1 thứ; rảnh nhiều thứ thì thêm nhiều dòng</span> <button class="btn g" id="vAdd" type="button">+ thêm dòng</button><div id="vAvail">'+availRow()+'</div></div>'+
-    '<div class="bar" style="margin-top:8px"><button class="btn" id="vSave">Lưu giáo viên</button></div><div id="vMsg"></div></div>'+
-    '<div class="card"><b>Danh sách giáo viên</b> <span class="small">Sửa / xóa GV hoặc giờ rảnh: vào tab GIAO_VIEN, GIO_RANH trên Google Sheet.</span><div id="vList" class="loading">…</div></div>';
+    '<div class="bar" style="margin-top:8px"><button class="btn" id="vSave">Lưu giáo viên</button><button class="btn g hide" id="vCancel">Hủy sửa</button><span id="vEditing" class="small"></span></div><div id="vMsg"></div></div>'+
+    '<div class="card"><b>Danh sách giáo viên</b> <span class="small"><b>Sửa</b> = đổi nhóm, màu, đơn giá, giờ rảnh · <b>Nghỉ việc</b> = GV thôi dạy từ 1 ngày (giữ lịch sử, chấm công, slot cũ) · <b>Xóa</b> = chỉ GV nhập nhầm, chưa có lớp.</span><div id="vList" class="loading">…</div></div>';
   var bindDelA=function(){ [].forEach.call(document.querySelectorAll('#vAvail .aDel'),function(b){ b.onclick=function(){ b.parentNode.remove(); }; }); };
   $('vAdd').onclick=function(){ $('vAvail').insertAdjacentHTML('beforeend', availRow()); bindDelA(); }; bindDelA();
+  var vEdit=null;
+  var endEdit=function(){ vEdit=null; $('vName').disabled=false; $('vSave').textContent='Lưu giáo viên'; $('vCancel').classList.add('hide'); $('vEditing').textContent=''; };
+  $('vCancel').onclick=function(){ endEdit(); VIEWS.gvs(); };
   $('vName').oninput=function(){ var t=S.teachers.filter(function(x){return x.name.toLowerCase()===$('vName').value.trim().toLowerCase();})[0];
     $('vSave').textContent=t?'Thêm giờ rảnh cho '+t.name:'Lưu giáo viên'; };
+  var startEdit=function(t){
+    vEdit=t; $('vName').value=t.name; $('vName').disabled=true; $('vGroup').value=t.group||'PH'; $('vColor').value=/^#[0-9a-f]{6}$/i.test(t.color)?t.color:'#9fc5e8';
+    $('vHours').value=t.hours||''; $('vPE').value=t.pE||''; $('vPP').value=t.pP||''; $('vPI').value=t.pI||''; $('vPT').value=t.pT||'';
+    $('vAvail').innerHTML=(t.avail.length?t.avail:[{}]).map(availRow).join(''); bindDelA();
+    $('vSave').textContent='Lưu thay đổi'; $('vCancel').classList.remove('hide'); $('vEditing').textContent='Đang sửa '+t.name+' – giờ rảnh bên trên sẽ THAY toàn bộ giờ rảnh cũ';
+    window.scrollTo(0,0);
+  };
   $('vSave').onclick=function(){
+    if(vEdit){
+      var g={name:vEdit.name,group:$('vGroup').value,color:$('vColor').value.toUpperCase(),hours:$('vHours').value,pE:$('vPE').value,pP:$('vPP').value,pI:$('vPI').value,pT:$('vPT').value,
+        avail:[].map.call(document.querySelectorAll('#vAvail .lichrow'),function(d){ return {thu:+d.querySelector('.aThu').value,from:d.querySelector('.aFrom').value,to:d.querySelector('.aTo').value}; })};
+      $('vSave').disabled=true;
+      return call('api_updateTeacher',g).then(function(r){ $('vSave').disabled=false; endEdit(); msg('vMsg','Đã sửa '+r.name+' · '+r.avail+' khung giờ rảnh.'); refreshInit().then(list); })
+        .catch(function(e){ $('vSave').disabled=false; msg('vMsg',e.message,'err'); });
+    }
     var f={name:$('vName').value.trim(),group:$('vGroup').value,color:$('vColor').value.toUpperCase(),hours:$('vHours').value,pE:$('vPE').value,pP:$('vPP').value,pI:$('vPI').value,pT:$('vPT').value,
       avail:[].map.call(document.querySelectorAll('#vAvail .lichrow'),function(d){ return {thu:+d.querySelector('.aThu').value,from:d.querySelector('.aFrom').value,to:d.querySelector('.aTo').value}; })};
     if(!f.name) return msg('vMsg','Chưa nhập tên giáo viên','warn');
@@ -509,10 +526,24 @@ VIEWS.gvs = function(){
       .catch(function(e){ $('vSave').disabled=false; msg('vMsg',e.message,'err'); });
   };
   var list=function(){ call('api_teachers').then(function(r){
-    $('vList').innerHTML='<div class="small">'+r.length+' giáo viên</div><div class="scroll" style="max-height:60vh"><table><tr><th>GV</th><th>Nhóm</th><th>Giờ làm</th><th>Giờ rảnh</th><th>ESL</th><th>PRE</th><th>IELTS</th><th>Trial</th></tr>'+
-      r.map(function(t){ var by={}; t.avail.forEach(function(a){ (by[a.thu]=by[a.thu]||[]).push(a.from+'–'+a.to); });
-        return '<tr><td style="background:'+esc(t.color||'#fff')+'"><b>'+esc(t.name)+'</b></td><td>'+esc(t.group)+'</td><td class="small">'+esc(t.hours)+'</td><td class="small">'+
-          (Object.keys(by).sort().map(function(k){ return DAYS[k]+' '+by[k].join(', '); }).join(' · ')||'<span style="color:var(--red)">chưa có</span>')+'</td><td>'+esc(t.pE)+'</td><td>'+esc(t.pP)+'</td><td>'+esc(t.pI)+'</td><td>'+esc(t.pT)+'</td></tr>'; }).join('')+'</table></div>';
+    S.gvList=r;
+    $('vList').innerHTML='<div class="small">'+r.filter(function(t){return !t.off;}).length+' giáo viên đang dạy'+(r.some(function(t){return t.off;})?' · '+r.filter(function(t){return t.off;}).length+' đã nghỉ việc (dòng xám)':'')+'</div><div class="scroll" style="max-height:60vh"><table><tr><th>GV</th><th>Nhóm</th><th>Giờ làm</th><th>Giờ rảnh</th><th>ESL</th><th>PRE</th><th>IELTS</th><th>Trial</th><th></th></tr>'+
+      r.map(function(t,i){ var by={}; t.avail.forEach(function(a){ (by[a.thu]=by[a.thu]||[]).push(a.from+'–'+a.to); });
+        return '<tr'+(t.off?' class="off"':'')+'><td style="background:'+esc(t.color||'#fff')+'"><b>'+esc(t.name)+'</b></td><td>'+esc(t.group)+'</td><td class="small">'+esc(t.hours)+'</td><td class="small">'+
+          (t.off?'<b>Nghỉ việc từ '+vn(t.off)+'</b>':(Object.keys(by).sort().map(function(k){ return DAYS[k]+' '+by[k].join(', '); }).join(' · ')||'<span style="color:var(--red)">chưa có</span>'))+'</td><td>'+esc(t.pE)+'</td><td>'+esc(t.pP)+'</td><td>'+esc(t.pI)+'</td><td>'+esc(t.pT)+'</td>'+
+          '<td style="white-space:nowrap">'+(t.off?'<button class="btn g" data-back="'+i+'">Đi làm lại</button>':'<button class="btn g" data-ed="'+i+'">Sửa</button> <button class="btn g" data-off="'+i+'">Nghỉ việc</button>')+
+          ' <button class="btn g" data-del="'+i+'" style="color:var(--red);border-color:var(--red)">Xóa</button></td></tr>'; }).join('')+'</table></div>';
+    var on=function(attr,fn){ [].forEach.call($('vList').querySelectorAll('['+attr+']'),function(b){ b.onclick=function(){ fn(S.gvList[+b.getAttribute(attr)],b); }; }); };
+    var done=function(b,text){ return function(){ msg('vMsg',text); refreshInit().then(list); }; };
+    var err=function(b){ return function(e){ b.disabled=false; msg('vMsg',e.message,'err'); window.scrollTo(0,0); }; };
+    on('data-ed',function(t){ startEdit(t); });
+    on('data-off',function(t,b){ var d=prompt('Cô/thầy '+t.name+' nghỉ việc TỪ NGÀY nào? (dd/mm/yyyy)\nTừ ngày này GV không còn trong ô chọn GV, lưới, giờ trống; giờ rảnh và tài khoản đăng nhập của GV bị xóa. Lịch, chấm công, slot trước đó giữ nguyên.', vn(S.today));
+      if(!d) return; var m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(d.trim()); if(!m) return msg('vMsg','Ngày phải dạng dd/mm/yyyy','err');
+      b.disabled=true; call('api_teacherLeave',t.name,m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2)).then(function(r){ msg('vMsg','Đã ghi '+r.name+' nghỉ việc từ '+vn(r.from)+(r.accounts?' · xóa '+r.accounts+' tài khoản đăng nhập':'')+'.'); refreshInit().then(list); }).catch(err(b)); });
+    on('data-back',function(t,b){ if(!confirm('Cô/thầy '+t.name+' đi làm lại? Sau đó bấm Sửa để thêm giờ rảnh.')) return;
+      b.disabled=true; call('api_teacherBack',t.name).then(done(b,t.name+' đã đi làm lại – bấm Sửa để nhập giờ rảnh.')).catch(err(b)); });
+    on('data-del',function(t,b){ if(!confirm('Xóa hẳn giáo viên '+t.name+'?\nChỉ dùng cho GV nhập nhầm, chưa có lớp nào. GV đã dạy thì dùng Nghỉ việc.')) return;
+      b.disabled=true; call('api_deleteTeacher',t.name).then(done(b,'Đã xóa '+t.name+'.')).catch(err(b)); });
   }).catch(fail); };
   list();
 };
