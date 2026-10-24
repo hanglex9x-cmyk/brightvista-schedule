@@ -175,7 +175,7 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
 <body>
 
 <header class="top">
-  <b>Sổ tay Bright Vista</b><span>Google Sheet + Web App · cập nhật 23/10/2026</span>
+  <b>Sổ tay Bright Vista</b><span>Google Sheet + Web App · cập nhật 24/10/2026</span>
   <button class="menu-btn" id="menuBtn" aria-expanded="false">☰ Mục lục</button>
 </header>
 
@@ -192,10 +192,41 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
   <div class="callout info"><div class="ic">i</div><p>Bấm mục bên trái để mở từng phần. Ảnh nào cũng bấm vào được để phóng to. Chấm đỏ có số trên ảnh khớp với số thứ tự các bước bên dưới.</p></div>
 </section>
 
+<section class="sec" id="dang-nhap" data-g="start" data-t="Đăng nhập hệ thống">
+  <div class="crumb" style="color:var(--navy)">Bắt đầu</div>
+  <h1>Đăng nhập hệ thống (dùng hằng ngày)</h1>
+  <p class="lead">Từ 24/10/2026 mọi người dùng chung 1 link, đăng nhập bằng tài khoản riêng: <a href="https://hanglex9x-cmyk.github.io/brightvista-schedule/app/" target="_blank" rel="noopener"><b>hanglex9x-cmyk.github.io/brightvista-schedule/app/</b></a>. Dữ liệu đọc và ghi thẳng vào Google Sheet, giống hệt Web App; không cần mã admin, không cần tài khoản Google.</p>
+  <div class="tbl"><table>
+    <tr><th>Ai dùng</th><th>Tên đăng nhập</th><th>Thấy những tab nào</th></tr>
+    <tr><td><b>Admin</b> (Nhung, chị Lương)</td><td><code>nhung</code>, <code>admin</code></td><td><span class="chip y">ADMIN · sửa được</span> đủ 12 tab của Web App + <a href="#keo-tha" data-go="keo-tha">Kéo-thả lịch</a>, <a href="#thong-bao" data-go="thong-bao">Thông báo</a>, <a href="#bao-cao" data-go="bao-cao">Báo cáo</a>, <a href="#tai-khoan" data-go="tai-khoan">Tài khoản</a></td></tr>
+    <tr><td><b>CTV / Sale</b></td><td><code>ctv</code></td><td><span class="chip m">CTV VIEW · chỉ xem</span> Lịch hàng ngày, Lưới theo ngày, Lịch học viên tổng hợp, Lịch chi tiết HV, Thông báo</td></tr>
+    <tr><td><b>Giáo viên</b></td><td>tên GV viết thường: <code>leah</code>, <code>jen</code>, <code>jane</code>, <code>che</code>, <code>raymond</code>…</td><td><span class="chip m">Teacher View · chỉ xem</span> Schedule, My slots (chỉ slot của mình, không có tiền), Reminders</td></tr>
+  </table></div>
+  <ol class="steps plain">
+    <li>Mở link, gõ <b>Tên đăng nhập</b> và <b>Mật khẩu</b> → <b>Đăng nhập</b>.</li>
+    <li>Lần đầu: mật khẩu tạm là <code>1234</code>. Hệ thống bắt đổi mật khẩu riêng (tối thiểu 6 ký tự, không dùng lại 1234) trước khi vào.</li>
+    <li>Góc phải trên cùng: 🔔 <b>chuông thông báo</b> (số đỏ = việc cần xử lý), tên tài khoản, <b>Đổi mật khẩu</b>, <b>Đăng xuất</b>.</li>
+  </ol>
+  <div class="callout tip"><div class="ic">✓</div><p>Đăng nhập giữ 6 giờ trên mỗi máy. Điện thoại: mở link bằng Chrome / Safari rồi <b>Thêm vào màn hình chính</b> để dùng như app.</p></div>
+  <div class="callout bad"><div class="ic">!</div><p>Mỗi người giữ mật khẩu riêng, <b>không gửi mật khẩu admin cho GV / CTV</b>. Nhập sai 8 lần liền thì tài khoản bị khóa tạm 15 phút. Quên mật khẩu: admin đặt lại ở tab <a href="#tai-khoan" data-go="tai-khoan">Tài khoản</a>.</p></div>
+</section>
+
+<section class="sec" id="tai-khoan" data-g="start" data-t="Tài khoản">
+  <div class="crumb" style="color:var(--navy)">Bắt đầu</div>
+  <h1>Tài khoản (chỉ admin)</h1>
+  <p class="lead">Tab <b>Tài khoản</b> trong hệ thống đăng nhập: xem, thêm tài khoản và đặt lại mật khẩu.</p>
+  <ol class="steps plain">
+    <li><b>Thêm tài khoản</b>: gõ Tên đăng nhập (chữ thường, số, dấu . _ -, 3–30 ký tự), chọn Vai trò. Vai trò <b>Giáo viên</b> phải chọn đúng tên GV để GV chỉ thấy slot của mình. Bấm <b>Thêm</b>: mật khẩu tạm là <code>1234</code>.</li>
+    <li>Cột <b>Mật khẩu</b>: <span style="color:#8a4b00;font-weight:700">Tạm (1234)</span> = người đó chưa đăng nhập lần nào; <span style="color:var(--green);font-weight:700">Đã đổi</span> = đã có mật khẩu riêng.</li>
+    <li><b>Đặt lại 1234</b>: dùng khi ai đó quên mật khẩu. Lần đăng nhập sau họ lại phải đổi mật khẩu.</li>
+  </ol>
+  <div class="callout info"><div class="ic">i</div><p>Danh sách nằm ở tab <b>TAI_KHOAN</b> trên Google Sheet. Cột Mật khẩu là mã hóa, <b>không sửa tay</b>. GV nghỉ việc: xóa dòng của GV đó ở tab TAI_KHOAN.</p></div>
+</section>
+
 <section class="sec" id="link" data-g="start" data-t="Link và quyền">
   <div class="crumb" style="color:var(--navy)">Bắt đầu</div>
   <h1>Link và quyền truy cập</h1>
-  <p class="lead">Có 4 link Web App (Admin, chủ file, Giáo viên, CTV) và 1 link Google Sheet. Link ngắn dễ nhớ trên trang GitHub của trung tâm: <code>/admin/</code>, <code>/teacher</code>, <code>/ctv</code>.</p>
+  <p class="lead">Link dùng hằng ngày là <a href="#dang-nhap" data-go="dang-nhap">hệ thống đăng nhập</a>. Các link Web App Google dưới đây vẫn chạy, dùng làm <b>dự phòng</b>.</p>
   <div class="tbl"><table>
     <tr><th>Ai dùng</th><th>Link</th><th>Được làm gì</th></tr>
     <tr><td><b>Admin</b> – Nhung và các admin khác</td><td>Link Web App + <code>?key=&lt;mã admin&gt;</code> – copy ở tab HUONG_DAN, dòng “LINK ADMIN KHÁC”</td><td><span class="chip y">ADMIN · đủ 12 tab · sửa được</span></td></tr>
@@ -211,7 +242,7 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <li>Ghi <b class="k">CTV VIEW</b> và có 4 tab → chỉ xem, dành cho cộng tác viên.</li>
     <li>Ghi <b class="k">Teacher View</b> và chỉ có 2 tab (Schedule, My slots) → chỉ xem. Admin gặp cảnh này là đang mở nhầm link không có mã.</li>
   </ul>
-  <div class="callout warn"><div class="ic">!</div><p>Mọi người phải <b>đăng nhập tài khoản Google</b> mới mở được Web App. Lần đầu mở sẽ hiện thanh xám “Ứng dụng này do một người dùng Google Apps Script tạo” – đây là thông báo bình thường, bấm <b>X</b> để tắt.</p></div>
+  <div class="callout warn"><div class="ic">!</div><p>Link Web App mở được không cần tài khoản Google; quyền sửa vẫn cần mã admin. Lần đầu mở sẽ hiện thanh xám “Ứng dụng này do một người dùng Google Apps Script tạo” – đây là thông báo bình thường, bấm <b>X</b> để tắt.</p></div>
 </section>
 
 <section class="sec" id="hang-ngay" data-g="start" data-t="Việc hằng ngày">
@@ -219,14 +250,15 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
   <h1>Việc hằng ngày của admin</h1>
   <p class="lead">Mỗi tin Zalo từ Sale/CTV ghi thành 1 lần lưu trên Web App; hệ thống tự cập nhật lịch, số buổi còn lại và ngày kết thúc khóa. Không sửa lịch bằng tay.</p>
   <ol class="steps plain">
-    <li>Mở Web App bằng <b>link admin</b>.</li>
+    <li><a href="#dang-nhap" data-go="dang-nhap">Đăng nhập</a> bằng tài khoản admin. Bấm 🔔 xem việc cần xử lý hôm nay.</li>
     <li>Đọc từng tin Zalo mới và xử lý theo loại:
       <div class="tbl"><table>
         <tr><th>Tin Zalo nói về</th><th>Làm ở đâu</th></tr>
         <tr><td>HV mới đăng ký / tái khóa</td><td><a href="#tao-khoa" data-go="tao-khoa">Học viên / Tạo khóa</a></td></tr>
         <tr><td>HV xin học thử</td><td><a href="#hoc-thu" data-go="hoc-thu">Học thử</a></td></tr>
         <tr><td>HV nghỉ, GV nghỉ, bảo lưu, học bù, đổi giờ 1 buổi, kết thúc sớm</td><td><a href="#zalo" data-go="zalo">Nhật ký Zalo</a></td></tr>
-        <tr><td>Đổi hẳn lịch cố định (thứ / giờ / GV)</td><td><a href="#chi-tiet" data-go="chi-tiet">Chi tiết khóa → Đổi lịch cố định</a></td></tr>
+        <tr><td>Đổi hẳn lịch cố định (thứ / giờ / GV)</td><td><a href="#chi-tiet" data-go="chi-tiet">Chi tiết khóa → Đổi lịch cố định</a> hoặc <a href="#keo-tha" data-go="keo-tha">Kéo-thả lịch</a></td></tr>
+        <tr><td>Dời 1 buổi sang ngày khác</td><td><a href="#keo-tha" data-go="keo-tha">Kéo-thả lịch</a> hoặc Nhật ký Zalo, loại “Dời buổi”</td></tr>
       </table></div></li>
     <li>Trước khi xếp giờ mới: xem <a href="#gio-trong" data-go="gio-trong">Giờ trống GV</a>, rồi bấm <b>Kiểm tra trùng giờ</b> trước khi lưu.</li>
     <li>Cuối ngày mở <a href="#kiem-tra" data-go="kiem-tra">Kiểm tra tuần</a>: không được còn dòng <span style="color:var(--red);font-weight:700">đỏ</span> (GV hoặc HV trùng giờ). Xem buổi Test và HV sắp hết khóa để báo Sale.</li>
@@ -296,7 +328,7 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
   <ol class="steps">
     <li><b>GV trùng giờ</b> (nền đỏ): 1 GV có 2 buổi cùng giờ. Phải đổi giờ / GV cho 1 trong 2 buổi.</li>
     <li><b>Học viên trùng giờ</b> (nền đỏ): thường là HV vừa học thử vừa có khóa chính cùng giờ.</li>
-    <li><b>Ngoài giờ rảnh của GV</b>: buổi xếp vào giờ GV không đăng ký rảnh. Hỏi GV rồi sửa giờ hoặc thêm giờ rảnh ở tab GIO_RANH.</li>
+    <li><b>Ngoài giờ rảnh của GV</b>: buổi xếp vào giờ GV không đăng ký rảnh. GV <b>vẫn dạy được</b> giờ đó → nới giờ rảnh ở tab GIO_RANH cho bao trọn cả buổi (lớp 55p lúc 21:15 → giờ rảnh đến ít nhất 22:10). GV <b>không dạy được</b> → đổi lịch học viên, không sửa giờ rảnh.</li>
     <li><b>Buổi Test / kết thúc khóa</b>: danh sách Test 1 và Test 2 trong tuần để báo Sale. Kéo xuống còn các khung Học thử, Buổi nghỉ, Khóa chưa rõ số buổi còn lại.</li>
   </ol>
   <div class="callout bad"><div class="ic">!</div><p>Mục tiêu cuối mỗi ngày: hai khung đỏ đầu tiên đều về <b>0</b>.</p></div>
@@ -382,11 +414,21 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <tr><td>Bảo lưu</td><td><code>BL</code></td><td>Khóa + Từ + Đến ngày (tối đa 60 ngày)</td><td><span class="chip n">Không</span> ngày kết thúc tự lùi</td><td><span class="chip n">Không</span></td></tr>
     <tr><td>Học bù</td><td><code>HB</code></td><td>Khóa + Từ ngày (ngày học bù) + Giờ mới + GV mới</td><td><span class="chip y">Có</span></td><td><span class="chip y">Có</span></td></tr>
     <tr><td>Đổi giờ/GV 1 buổi</td><td><code>x</code></td><td>Khóa + Từ ngày (ngày của buổi đó) + Giờ mới và/hoặc GV mới</td><td><span class="chip y">Có</span></td><td><span class="chip y">Có</span></td></tr>
-    <tr><td>Kết thúc sớm / Hủy khóa</td><td><code>KT</code></td><td>Khóa + Từ ngày = buổi học cuối cùng</td><td><span class="chip y">Có</span> đến buổi cuối</td><td><span class="chip y">Có</span> đến buổi cuối</td></tr>
+    <tr><td>Dời buổi</td><td><code>DB</code></td><td>Khóa + <b>Từ ngày = ngày học cũ</b> + <b>Đến ngày = ngày học mới</b> (+ Giờ mới / GV mới nếu đổi). Ngày cũ không học</td><td><span class="chip y">Có</span> ở ngày mới</td><td><span class="chip y">Có</span></td></tr>
+    <tr><td>Kết thúc sớm / Hủy khóa</td><td><code>KT</code></td><td>Khóa + Từ ngày = buổi học cuối cùng. Từ ngày <b>trước ngày bắt đầu khóa</b> = hủy cả khóa (khóa tái khóa không học nữa)</td><td><span class="chip y">Có</span> đến buổi cuối</td><td><span class="chip y">Có</span> đến buổi cuối</td></tr>
     <tr><td>Tái khóa (ghi nhận)</td><td>–</td><td>Chỉ lưu tin; tạo khóa ở <a href="#tao-khoa" data-go="tao-khoa">Tạo khóa</a></td><td><span class="chip m">–</span></td><td><span class="chip m">–</span></td></tr>
     <tr><td>Khác (ghi chú)</td><td>–</td><td>Chỉ lưu tin để tra lại</td><td><span class="chip m">–</span></td><td><span class="chip m">–</span></td></tr>
   </table></div>
   <div class="callout tip"><div class="ic">✓</div><p><b>Mẫu đổi giờ 1 buổi</b> (ví dụ “Lớp Lưu Khánh An T2 19/10 xuống 20h, 1 buổi duy nhất”): Loại = <b>Đổi giờ/GV 1 buổi</b> → gõ tên HV, chọn khóa → Từ ngày = 19/10 → Giờ mới = 20:00 → Lưu. Chỉ buổi đó đổi, các tuần sau giữ giờ cũ.</p></div>
+  <h3>Mẫu từ tin Zalo thật</h3>
+  <div class="tbl"><table>
+    <tr><th>Tin Zalo</th><th>Ghi thế nào</th></tr>
+    <tr><td>“Lê Quốc Bảo nghỉ T7 24/10 tính phí hv, gv (hv báo muộn)”</td><td>Loại <b>HV nghỉ tính phí GV và HV</b> + khóa + Từ ngày 24/10. GV tự được 1 slot (28p = slot 30'), không cần ghi số phút.</td></tr>
+    <tr><td>“Phạm Huy Anh đã hết khóa và không tái khóa”</td><td>Loại <b>Kết thúc sớm/Hủy khóa</b> + khóa + Từ ngày = buổi học cuối (20/10).</td></tr>
+    <tr><td>“Phạm Ngô Bảo Kiệt ko tái khoá nữa” (khóa tái khóa đã tạo sẵn)</td><td>Loại <b>Kết thúc sớm/Hủy khóa</b> + khóa tái khóa + Từ ngày trước ngày bắt đầu khóa đó → hủy cả khóa.</td></tr>
+    <tr><td>“Lịch Nguyễn Thiện Long: 18h T3,6 (55p)”</td><td>Đổi lịch cố định từ thứ 2 tuần sau (Chi tiết khóa → Đổi lịch cố định, hoặc Kéo-thả → Từ tuần này trở đi).</td></tr>
+    <tr><td>“Nguyễn Việt Bảo … cứ để 40 buổi” (khóa chưa rõ số buổi)</td><td>Tab KHOA_HOC trên Sheet: điền <b>Tổng số buổi</b> = 40.</td></tr>
+  </table></div>
   <div class="callout warn"><div class="ic">!</div><p><b>Ghi nhầm?</b> Web App không có nút xóa. Mở tab <b>NHAT_KY</b> trên Google Sheet, sửa hoặc xóa dòng đó; Web App tính lại ở lần mở sau.</p></div>
 </section>
 
@@ -420,6 +462,53 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <li><b>Danh sách giáo viên</b>: giờ rảnh của từng GV. GV chưa khai giờ rảnh hiện chữ <span style="color:var(--red);font-weight:700">chưa có</span>.</li>
   </ol>
   <div class="callout warn"><div class="ic">!</div><p>Web App chỉ <b>thêm</b>. Muốn <b>sửa / xóa</b> GV hoặc giờ rảnh (GV nghỉ việc, đổi giờ làm): vào tab <b>GIAO_VIEN</b>, <b>GIO_RANH</b> trên Google Sheet. Giờ “Từ” phải trước giờ “Đến”, không thì Web App báo lỗi.</p></div>
+</section>
+
+<section class="sec" id="keo-tha" data-g="input" data-t="Kéo-thả lịch">
+  <div class="crumb" style="color:var(--green)">Hệ thống đăng nhập · Nhập liệu</div>
+  <h1>Kéo-thả lịch</h1>
+  <p class="lead">Tab <b>Kéo-thả lịch</b> (chỉ admin): mỗi cột là 1 ngày T2–T7, mỗi thẻ là 1 buổi học. Kéo thẻ sang cột khác để dời buổi; mọi thay đổi ghi thẳng vào Google Sheet.</p>
+  <ol class="steps plain">
+    <li>Chọn <b>Tuần từ</b> (◀ ▶ để lùi / tiến) và <b>Giáo viên</b> để bảng gọn hơn.</li>
+    <li><b>Kéo</b> thẻ sang ngày mới (hoặc <b>bấm</b> vào thẻ để chỉ đổi giờ / GV). Ngày đã qua, buổi đã nghỉ và học thử không kéo được.</li>
+    <li>Trong khung hiện ra: sửa <b>Ngày học mới</b>, <b>Giờ</b>, <b>Giáo viên</b> nếu cần, rồi chọn:
+      <ul>
+        <li><b>Chỉ buổi này</b>: ghi vào Nhật ký Zalo, loại <b>Dời buổi</b> (khác ngày) hoặc <b>Đổi giờ/GV 1 buổi</b> (cùng ngày). Các tuần sau giữ lịch cũ.</li>
+        <li><b>Từ tuần này trở đi</b>: đổi hẳn lịch cố định từ ngày đó; các buổi trước vẫn giữ lịch cũ.</li>
+      </ul></li>
+    <li>Dán tin Zalo vào ô lý do, bấm <b>Kiểm tra trùng</b> rồi <b>Lưu vào Sheet</b>.</li>
+  </ol>
+  <div class="callout warn"><div class="ic">!</div><p>Báo “ngoài giờ rảnh” vẫn lưu được, nhưng chỉ lưu khi đã hỏi GV. Báo “TRÙNG với …” thì chọn giờ khác.</p></div>
+</section>
+
+<section class="sec" id="thong-bao" data-g="view" data-t="Thông báo / nhắc lịch">
+  <div class="crumb" style="color:var(--sky)">Hệ thống đăng nhập · Xem lịch</div>
+  <h1>Thông báo và nhắc lịch</h1>
+  <p class="lead">Bấm 🔔 trên cùng hoặc tab <b>Thông báo</b>. Số đỏ trên chuông = số mục cần xử lý (tự làm mới 10 phút/lần). Mỗi mục có nút <b>Xem</b> mở đúng tab để xử lý.</p>
+  <div class="tbl"><table>
+    <tr><th>Mục</th><th>Việc cần làm</th></tr>
+    <tr><td>ℹ Buổi hôm nay / ngày mai</td><td>Nắm lịch trong ngày</td></tr>
+    <tr><td>▲ Buổi Test còn lại tuần này</td><td>Nhắc GV làm bài Test, báo Sale khi có Test 2</td></tr>
+    <tr><td>● GV / học viên trùng giờ</td><td>Đổi giờ ngay (Kiểm tra tuần / Kéo-thả)</td></tr>
+    <tr><td>▲ Buổi ngoài giờ rảnh GV</td><td>Hỏi GV, sửa giờ rảnh hoặc đổi lịch</td></tr>
+    <tr><td>▲ Học viên sắp hết khóa (≤ 2 buổi)</td><td>Báo Sale tái khóa</td></tr>
+    <tr><td>▲ Bảo lưu quá 60 ngày</td><td>Liên hệ học lại hoặc Đóng hẳn khóa (tab Bảo lưu)</td></tr>
+    <tr><td>ℹ Học thử đã học, chưa ghi kết quả</td><td>Tab Học thử: chọn Đăng ký / Không đăng ký</td></tr>
+  </table></div>
+  <p>Giáo viên đăng nhập thấy bản tiếng Anh (<b>Reminders</b>) chỉ gồm lớp của mình; CTV thấy lịch hôm nay / mai và Test.</p>
+</section>
+
+<section class="sec" id="bao-cao" data-g="month" data-t="Báo cáo">
+  <div class="crumb" style="color:var(--violet)">Hệ thống đăng nhập · Cuối tháng</div>
+  <h1>Báo cáo</h1>
+  <p class="lead">Tab <b>Báo cáo</b> (chỉ admin): số liệu tổng hợp theo tháng chọn ở ô <b>Tháng</b>.</p>
+  <ul>
+    <li><b>Ô số trên cùng</b>: buổi đã học trong tháng, tổng slot GV (tới hôm nay), khóa đang học, sắp hết khóa, học thử đăng ký / tổng.</li>
+    <li><b>Số buổi 8 tuần gần nhất</b>: cột xanh đậm = đã học, xanh nhạt = sắp tới trong tuần này, xám = nghỉ. Các tuần trước 12/10 lấy từ tab LICH_SU.</li>
+    <li><b>Tình trạng buổi trong tháng</b> (đã học / GV nghỉ / KP / MP / học thử…) và <b>Khóa theo trạng thái</b>.</li>
+    <li><b>Slot theo giáo viên</b>: kỳ 1 / kỳ 2; nút <b>Tải CSV slot GV</b> để mở bằng Excel.</li>
+    <li><b>Học thử</b>: tổng, đăng ký, không đăng ký, chờ kết quả, tỷ lệ chốt.</li>
+  </ul>
 </section>
 
 <!-- ================= CUỐI THÁNG ================= -->
