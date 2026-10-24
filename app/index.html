@@ -317,6 +317,7 @@ function showCourse(id){
 
 /* ---------- NHẬT KÝ ZALO ---------- */
 var EV_HELP = {
+  'Đóng slot GV':'Chỉ ghi lại tin. Muốn hệ thống tự bớt giờ rảnh của GV: dùng nút Đóng slot ở tab Giáo viên (tự ghi dòng nhật ký này).',
   'Dời buổi':'Dời 1 buổi sang ngày khác: chọn khóa, Từ ngày = ngày học cũ, Đến ngày = ngày học mới (Giờ mới / GV mới nếu đổi). Buổi cũ không học, vẫn trừ 1 buổi ở ngày mới.',
   'HV nghỉ KP':'Nghỉ không mất phí: chọn khóa + Từ ngày (Đến ngày nếu nghỉ nhiều ngày). Khóa tự kéo dài.',
   'HV nghỉ MP':'Nghỉ mất phí / vắng không báo / báo sát giờ: vẫn trừ buổi, GV vẫn tính slot.',
@@ -493,9 +494,28 @@ VIEWS.gvs = function(){
     '<label>Đơn giá IELTS<input id="vPI" type="number"></label><label>Đơn giá Trial (/buổi)<input id="vPT" type="number"></label></div>'+
     '<div style="margin-top:10px"><b>Giờ rảnh</b> <span class="small">mỗi dòng = 1 khung giờ trong 1 thứ; rảnh nhiều thứ thì thêm nhiều dòng</span> <button class="btn g" id="vAdd" type="button">+ thêm dòng</button><div id="vAvail">'+availRow()+'</div></div>'+
     '<div class="bar" style="margin-top:8px"><button class="btn" id="vSave">Lưu giáo viên</button><button class="btn g hide" id="vCancel">Hủy sửa</button><span id="vEditing" class="small"></span></div><div id="vMsg"></div></div>'+
+    '<div class="card" id="csCard"><b>🔒 Đóng slot giáo viên</b> <span class="small">GV không nhận lớp vào giờ đó nữa (bận lịch khác). Hệ thống bớt giờ rảnh, báo lớp đang xếp vào giờ đó và tự ghi Nhật ký Zalo.</span><div class="grid2" style="margin-top:8px">'+
+      '<label>Giáo viên *<select id="csGv">'+gvOptions('')+'</select></label><label>Giờ bắt đầu *<input id="csTime" type="time" step="1800"></label>'+
+      '<label>Đóng bao lâu<select id="csMins"><option value="30">30 phút (1 slot)</option><option value="60">1 tiếng</option><option value="90">1,5 tiếng</option><option value="120">2 tiếng</option></select></label>'+
+      '<label>Áp dụng từ ngày<input id="csFrom" type="date" value="'+S.today+'"></label></div>'+
+      '<div style="margin-top:8px"><b>Thứ *</b> '+[2,3,4,5,6,7].map(function(t){return '<label style="margin-right:10px"><input type="checkbox" class="csThu" value="'+t+'"> '+DAYS[t]+'</label>';}).join('')+'</div>'+
+      '<label class="small" style="display:block;margin-top:8px">Nội dung tin Zalo<textarea id="csText" placeholder="VD: Đóng slot 19h30 T3,5,7 của cô Jessa (cô bận lịch khác)"></textarea></label>'+
+      '<div class="bar" style="margin-top:8px"><button class="btn" id="csSave">Đóng slot</button></div><div id="csMsg"></div></div>'+
     '<div class="card"><b>Danh sách giáo viên</b> <span class="small"><b>Sửa</b> = đổi nhóm, màu, đơn giá, giờ rảnh · <b>Nghỉ việc</b> = GV thôi dạy từ 1 ngày (giữ lịch sử, chấm công, slot cũ) · <b>Xóa</b> = chỉ GV nhập nhầm, chưa có lớp.</span><div id="vList" class="loading">…</div></div>';
   var bindDelA=function(){ [].forEach.call(document.querySelectorAll('#vAvail .aDel'),function(b){ b.onclick=function(){ b.parentNode.remove(); }; }); };
   $('vAdd').onclick=function(){ $('vAvail').insertAdjacentHTML('beforeend', availRow()); bindDelA(); }; bindDelA();
+  $('csSave').onclick=function(){
+    var f={gv:$('csGv').value,time:$('csTime').value,mins:$('csMins').value,from:$('csFrom').value,text:$('csText').value,
+      thus:[].filter.call(document.querySelectorAll('.csThu'),function(c){return c.checked;}).map(function(c){return +c.value;})};
+    if(!f.gv||!f.time||!f.thus.length) return msg('csMsg','Chọn giáo viên, giờ và ít nhất 1 thứ','warn');
+    if(!confirm('Đóng slot '+f.time+' ('+f.mins+' phút) '+f.thus.map(function(t){return DAYS[t];}).join(', ')+' của '+f.gv+'?')) return;
+    $('csSave').disabled=true;
+    call('api_closeSlot',f).then(function(r){ $('csSave').disabled=false;
+      $('csMsg').innerHTML='<div class="msg ok">Đã đóng slot '+esc(r.slot)+' của '+esc(r.gv)+' và ghi Nhật ký Zalo.<br>Giờ rảnh: '+r.avail.map(esc).join('<br>')+'</div>'+
+        (r.lessons.length?'<div class="msg warn"><b>Còn '+r.lessons.length+' lớp đang xếp vào giờ này</b> – đổi lịch cố định / kéo-thả sang giờ khác:<br>'+r.lessons.map(esc).join('<br>')+'</div>':'<div class="msg ok">✔ Không có lớp nào đang xếp vào giờ này.</div>');
+      $('csText').value=''; [].forEach.call(document.querySelectorAll('.csThu'),function(c){c.checked=false;}); list(); })
+      .catch(function(e){ $('csSave').disabled=false; msg('csMsg',e.message,'err'); });
+  };
   var vEdit=null;
   var endEdit=function(){ vEdit=null; $('vName').disabled=false; $('vSave').textContent='Lưu giáo viên'; $('vCancel').classList.add('hide'); $('vEditing').textContent=''; };
   $('vCancel').onclick=function(){ endEdit(); VIEWS.gvs(); };
@@ -531,12 +551,13 @@ VIEWS.gvs = function(){
       r.map(function(t,i){ var by={}; t.avail.forEach(function(a){ (by[a.thu]=by[a.thu]||[]).push(a.from+'–'+a.to); });
         return '<tr'+(t.off?' class="off"':'')+'><td style="background:'+esc(t.color||'#fff')+'"><b>'+esc(t.name)+'</b></td><td>'+esc(t.group)+'</td><td class="small">'+esc(t.hours)+'</td><td class="small">'+
           (t.off?'<b>Nghỉ việc từ '+vn(t.off)+'</b>':(Object.keys(by).sort().map(function(k){ return DAYS[k]+' '+by[k].join(', '); }).join(' · ')||'<span style="color:var(--red)">chưa có</span>'))+'</td><td>'+esc(t.pE)+'</td><td>'+esc(t.pP)+'</td><td>'+esc(t.pI)+'</td><td>'+esc(t.pT)+'</td>'+
-          '<td style="white-space:nowrap">'+(t.off?'<button class="btn g" data-back="'+i+'">Đi làm lại</button>':'<button class="btn g" data-ed="'+i+'">Sửa</button> <button class="btn g" data-off="'+i+'">Nghỉ việc</button>')+
+          '<td style="white-space:nowrap">'+(t.off?'<button class="btn g" data-back="'+i+'">Đi làm lại</button>':'<button class="btn g" data-ed="'+i+'">Sửa</button> <button class="btn g" data-cs="'+i+'">Đóng slot</button> <button class="btn g" data-off="'+i+'">Nghỉ việc</button>')+
           ' <button class="btn g" data-del="'+i+'" style="color:var(--red);border-color:var(--red)">Xóa</button></td></tr>'; }).join('')+'</table></div>';
     var on=function(attr,fn){ [].forEach.call($('vList').querySelectorAll('['+attr+']'),function(b){ b.onclick=function(){ fn(S.gvList[+b.getAttribute(attr)],b); }; }); };
     var done=function(b,text){ return function(){ msg('vMsg',text); refreshInit().then(list); }; };
     var err=function(b){ return function(e){ b.disabled=false; msg('vMsg',e.message,'err'); window.scrollTo(0,0); }; };
     on('data-ed',function(t){ startEdit(t); });
+    on('data-cs',function(t){ $('csGv').value=t.name; $('csMsg').innerHTML=''; document.getElementById('csCard').scrollIntoView({behavior:'smooth'}); $('csTime').focus(); });
     on('data-off',function(t,b){ var d=prompt('Cô/thầy '+t.name+' nghỉ việc TỪ NGÀY nào? (dd/mm/yyyy)\nTừ ngày này GV không còn trong ô chọn GV, lưới, giờ trống; giờ rảnh và tài khoản đăng nhập của GV bị xóa. Lịch, chấm công, slot trước đó giữ nguyên.', vn(S.today));
       if(!d) return; var m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(d.trim()); if(!m) return msg('vMsg','Ngày phải dạng dd/mm/yyyy','err');
       b.disabled=true; call('api_teacherLeave',t.name,m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2)).then(function(r){ msg('vMsg','Đã ghi '+r.name+' nghỉ việc từ '+vn(r.from)+(r.accounts?' · xóa '+r.accounts+' tài khoản đăng nhập':'')+'.'); refreshInit().then(list); }).catch(err(b)); });

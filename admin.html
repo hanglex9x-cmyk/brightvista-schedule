@@ -296,7 +296,7 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
 <section class="sec" id="luoi-ngay" data-g="view" data-t="Lưới theo ngày">
   <div class="crumb" style="color:var(--sky)">Web App · Xem lịch</div>
   <h1>Lưới theo ngày</h1>
-  <p class="lead">Một ngày dạng lưới: mỗi cột là 1 GV, mỗi dòng là 1 mốc 30 phút. Dùng để nhìn nhanh ai đang rảnh, ai kín lịch.</p>
+  <p class="lead">Một ngày dạng lưới: mỗi cột là 1 GV (cả GV Việt Nam Cathy, Jen ở cuối bảng), mỗi dòng là 1 mốc 30 phút. Dùng để nhìn nhanh ai đang rảnh, ai kín lịch.</p>
   <figure class="shot" data-img="grid" data-f="F" data-pins="1:85,113;2:165,113;3:258,113;4:180,330;5:800,155"></figure>
   <ol class="steps">
     <li><b>Ngày</b>: chọn ngày cần xem.</li>
@@ -427,6 +427,7 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <tr><td>Bảo lưu</td><td><code>BL</code></td><td>Khóa + Từ + Đến ngày (tối đa 60 ngày)</td><td><span class="chip n">Không</span> ngày kết thúc tự lùi</td><td><span class="chip n">Không</span></td></tr>
     <tr><td>Học bù</td><td><code>HB</code></td><td>Khóa + Từ ngày (ngày học bù) + Giờ mới + GV mới</td><td><span class="chip y">Có</span></td><td><span class="chip y">Có</span></td></tr>
     <tr><td>Đổi giờ/GV 1 buổi</td><td><code>x</code></td><td>Khóa + Từ ngày (ngày của buổi đó) + Giờ mới và/hoặc GV mới</td><td><span class="chip y">Có</span></td><td><span class="chip y">Có</span></td></tr>
+    <tr><td>Đóng slot GV</td><td>–</td><td>Tự ghi khi bấm <b>Đóng slot</b> ở tab <a href="#giao-vien" data-go="giao-vien">Giáo viên</a> (không cần ghi tay)</td><td><span class="chip m">–</span></td><td><span class="chip m">–</span></td></tr>
     <tr><td>Dời buổi</td><td><code>DB</code></td><td>Khóa + <b>Từ ngày = ngày học cũ</b> + <b>Đến ngày = ngày học mới</b> (+ Giờ mới / GV mới nếu đổi). Ngày cũ không học</td><td><span class="chip y">Có</span> ở ngày mới</td><td><span class="chip y">Có</span></td></tr>
     <tr><td>Kết thúc sớm / Hủy khóa</td><td><code>KT</code></td><td>Khóa + Từ ngày = buổi học cuối cùng. Từ ngày <b>trước ngày bắt đầu khóa</b> = hủy cả khóa (khóa tái khóa không học nữa)</td><td><span class="chip y">Có</span> đến buổi cuối</td><td><span class="chip y">Có</span> đến buổi cuối</td></tr>
     <tr><td>Tái khóa (ghi nhận)</td><td>–</td><td>Chỉ lưu tin; tạo khóa ở <a href="#tao-khoa" data-go="tao-khoa">Tạo khóa</a></td><td><span class="chip m">–</span></td><td><span class="chip m">–</span></td></tr>
@@ -474,6 +475,16 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <li>Bấm <b>Lưu giáo viên</b>. Web App báo “Đã thêm GV … · thêm N khung giờ rảnh”.</li>
     <li><b>Danh sách giáo viên</b>: giờ rảnh của từng GV. GV chưa khai giờ rảnh hiện chữ <span style="color:var(--red);font-weight:700">chưa có</span>.</li>
   </ol>
+  <h3>Đóng slot giáo viên</h3>
+  <p>Dùng khi GV báo không nhận lớp vào 1 giờ cố định nữa (bận lịch khác). Ví dụ tin Zalo: <i>“Đóng slot 19h30 T3,5,7 của cô Jessa (cô bận lịch khác)”</i>.</p>
+  <ol class="steps plain">
+    <li>Tab <b>Giáo viên</b> → khung <b>🔒 Đóng slot giáo viên</b> (hoặc bấm nút <b>Đóng slot</b> ở dòng GV trong danh sách – GV tự được chọn sẵn).</li>
+    <li><b>Giáo viên</b> = Jessa · <b>Giờ bắt đầu</b> = 19:30 · <b>Đóng bao lâu</b> = 30 phút (1 slot; đóng cả buổi 55 phút thì chọn 1 tiếng) · tích <b>T3, T5, T7</b>.</li>
+    <li>Dán tin Zalo vào ô <b>Nội dung</b> → bấm <b>Đóng slot</b> → xác nhận.</li>
+    <li>Hệ thống báo giờ rảnh mới từng thứ, ví dụ <code>T3: 17:30–22:00 → 17:30–19:30, 20:00–22:00</code>, và tự ghi 1 dòng <b>Nhật ký Zalo</b> loại <b>Đóng slot GV</b> (cột Ghi chú ghi rõ đã sửa giờ rảnh thế nào).</li>
+    <li>Nếu báo <b>“Còn N lớp đang xếp vào giờ này”</b> (ví dụ <code>HV0093-1 T3 19:30 (Huỳnh Thiên Kim)</code>): đổi các lớp đó sang giờ / GV khác – Học viên → bấm mã khóa → <b>Đổi lịch cố định</b>, hoặc <b>Kéo-thả lịch</b> → <b>Từ tuần này trở đi</b>. Xong mở <b>Kiểm tra tuần</b>: mục “Ngoài giờ rảnh của GV” phải về 0.</li>
+  </ol>
+  <div class="callout info"><div class="ic">i</div><p>Sau khi đóng, giờ đó biến khỏi <b>Giờ trống GV</b>; ô tương ứng trong <b>Lưới theo ngày</b> chuyển xám. Mở lại slot: bấm <b>Sửa</b> ở dòng GV và thêm lại khung giờ.</p></div>
   <h3>Sửa, nghỉ việc, xóa giáo viên</h3>
   <p>Mỗi dòng trong <b>Danh sách giáo viên</b> có nút:</p>
   <div class="tbl"><table>
