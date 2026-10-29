@@ -451,6 +451,7 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <tr><td>HV nghỉ chưa rõ phí</td><td><code>?</code></td><td>Khóa + Từ ngày; hỏi Sale rồi đổi loại ở tab NHAT_KY</td><td><span class="chip n">Không</span> tạm như KP</td><td><span class="chip n">Không</span></td></tr>
     <tr><td>HV nghỉ không tính phí HV và GV</td><td><code>KP</code></td><td>Khóa + Từ ngày (+ Đến ngày). Tên dễ hiểu của “HV nghỉ KP”</td><td><span class="chip n">Không</span></td><td><span class="chip n">Không</span></td></tr>
     <tr><td>HV nghỉ tính phí GV và HV</td><td><code>MP</code></td><td>Khóa + Từ ngày. Tên dễ hiểu của “HV nghỉ MP”</td><td><span class="chip y">Có</span></td><td><span class="chip y">Có</span></td></tr>
+    <tr><td>HV nghỉ không tính phí HV, tính phí GV</td><td><code>KPG</code></td><td>Khóa + Từ ngày (+ Đến ngày)</td><td><span class="chip n">Không</span> khóa tự kéo dài</td><td><span class="chip y">Có</span></td></tr>
     <tr><td>GV nghỉ / GV nghỉ không tính phí HV và GV</td><td><code>GV</code></td><td>Chỉ chọn <b>Giáo viên</b> = nghỉ cả ngày, hủy mọi lớp của GV. Chọn <b>Khóa</b> = chỉ hủy lớp đó</td><td><span class="chip n">Không</span></td><td><span class="chip n">Không</span></td></tr>
     <tr><td>GV hủy lớp (chọn HV)</td><td><code>GV</code></td><td><b>Bắt buộc chọn Khóa</b> (tên HV) + Ngày. Hủy nhiều HV thì lưu mỗi HV 1 lần</td><td><span class="chip n">Không</span></td><td><span class="chip n">Không</span></td></tr>
     <tr><td>GV hủy lớp all</td><td><code>GV</code></td><td>Chọn <b>Giáo viên</b> (không chọn khóa) + Từ / Đến ngày: hủy TẤT CẢ lớp của GV</td><td><span class="chip n">Không</span></td><td><span class="chip n">Không</span></td></tr>
@@ -466,6 +467,7 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <tr><td>Khác (ghi chú)</td><td>–</td><td>Chỉ lưu tin để tra lại</td><td><span class="chip m">–</span></td><td><span class="chip m">–</span></td></tr>
   </table></div>
   <div class="callout tip"><div class="ic">✓</div><p><b>Mẫu đổi giờ 1 buổi</b> (ví dụ “Lớp Lưu Khánh An T2 19/10 xuống 20h, 1 buổi duy nhất”): Loại = <b>Đổi giờ/GV 1 buổi</b> → gõ tên HV, chọn khóa → Từ ngày = 19/10 → Giờ mới = 20:00 → Lưu. Chỉ buổi đó đổi, các tuần sau giữ giờ cũ.</p></div>
+  <div class="callout info"><div class="ic">i</div><p><b>Nghỉ buổi gốc nhưng học với GV khác cùng một ngày</b>: ghi 2 sự kiện cho cùng ngày — một sự kiện nghỉ của buổi gốc (KP, MP, KPG…) và một sự kiện <b>Đổi giờ/GV 1 buổi</b> với GV mới. Hệ thống tự tách thành 2 buổi: buổi của GV gốc hiện tên HV kèm trạng thái nghỉ, buổi của GV mới là buổi học tính phí, ghi loại “Đổi giờ/GV”.</p></div>
   <h3>Mẫu từ tin Zalo thật</h3>
   <div class="tbl"><table>
     <tr><th>Tin Zalo</th><th>Ghi thế nào</th></tr>
