@@ -394,6 +394,11 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <li>Khi hết thời gian tạm dừng: lặp lại với Áp dụng từ ngày = <b>ngày học lại</b>, nhập lại đủ các buổi như cũ.</li>
   </ol>
   <div class="callout info"><div class="ic">i</div><p>Ví dụ: Nguyễn Đức Trí (HV0437-1) tạm dừng buổi thứ 3 với cô Cathy từ 27/10 đến hết 22/12/2026 để học lớp ngữ pháp, giữ nguyên buổi thứ 5; lịch thứ 3 chạy lại từ 29/12/2026. Số buổi không bị trừ trong thời gian tạm dừng.</p></div>
+  <h3>Level riêng theo từng buổi (từ 02/11/2026)</h3>
+  <ol class="steps plain">
+    <li>Mỗi dòng trong <b>Lịch cố định mỗi tuần</b> (khi tạo khóa và trong <b>Đổi lịch cố định từ 1 ngày</b>) có thêm ô <b>Level (nếu buổi này khác)</b> ngay cạnh ô chọn giáo viên — dùng khi một học viên học khác phần theo buổi, ví dụ buổi thứ 2 học <i>Ielts (Listening)</i>, buổi thứ 5 học <i>Ielts (Writing)</i>.</li>
+    <li>Điền Level vào đúng dòng buổi đó; buổi nào để trống sẽ dùng Level chung của khóa. Lịch tuần, Lưới theo ngày và Lịch chi tiết HV hiện đúng Level của từng buổi.</li>
+  </ol>
   <h3>Cập nhật level / lớp (áp dụng từ ngày)</h3>
   <ol class="steps plain">
     <li>Mở <b>Chi tiết khóa</b> → mục <b>Cập nhật level / lớp</b> (ngay dưới Đổi lịch cố định). Muốn đổi lớp (ví dụ chuyển từ ESL lên IELTS) thì chọn ở ô <b>Lớp mới</b> ngay cạnh Level mới; nếu chỉ đổi level thì để ô Lớp mới ở “không đổi lớp”, và ngược lại. Lớp mới cũng áp dụng từ ngày đã chọn: buổi trước ngày đó giữ lớp cũ, từ ngày đó trở đi tính theo lớp mới (kể cả Slot &amp; lương).</li>
@@ -618,7 +623,7 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
   <ol class="steps">
     <li><b>Tháng</b>: chọn tháng tính lương.</li>
     <li><b>Tổng slot</b> = slot 30' + Trial + 2 × slot 60'.</li>
-    <li><b>Kỳ 1</b> = ngày 1–15, <b>Kỳ 2</b> = ngày 16 đến cuối tháng.</li>
+    <li><b>Kỳ 1</b> = ngày 1–15, <b>Kỳ 2</b> = ngày 16 đến cuối tháng. Từ 02/11/2026, mỗi ô kỳ hiện thêm dòng tách <b>ESL · PRE-IELTS · IELTS · Trial</b>; cột <b>Peso</b> là tổng tiền lương của cả 2 kỳ, cột <b>VND</b> là tiền quy đổi theo tỷ giá.</li>
     <li><b>Peso / VND</b>: chỉ có số khi đã điền đơn giá ở tab GIAO_VIEN và tỷ giá ở tab CAI_DAT.</li>
   </ol>
   <div class="tbl"><table>
@@ -633,6 +638,18 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
   <p>Kéo xuống có bảng <b>Slot theo ngày</b>: rê chuột vào ô để xem chi tiết 30' / 60' / Trial. Xuất ra Sheet: menu <b>Bright Vista → Xuất slot GV tháng → tab SLOT_GV</b>.</p>
 </section>
 
+<section class="sec" id="thanh-toan" data-g="month" data-t="Thanh toán lương">
+  <div class="crumb" style="color:var(--violet)">Web App · Cuối tháng</div>
+  <h1>Thanh toán lương giáo viên</h1>
+  <p class="lead">Mục “Thanh toán lương” (ngay cạnh Slot &amp; lương): tiền lương từng kỳ tự lấy từ Slot &amp; lương, Admin chỉ điền số đã trả — còn lại và tình trạng tự chạy.</p>
+  <ol class="steps">
+    <li>Chọn <b>Tháng</b> cần thanh toán. Cột <b>Kỳ 1 (1–15)</b> và <b>Kỳ 2 (16–hết tháng)</b> là tiền lương từng kỳ của từng giáo viên; cột <b>Tổng</b> = Kỳ 1 + Kỳ 2 (kèm số VND quy đổi khi đã có tỷ giá).</li>
+    <li>Khi trả đợt 1: điền số tiền vào ô <b>Đã thanh toán đợt 1</b> rồi bấm <b>Lưu</b>. Cột <b>Cần thanh toán đợt 2</b> tự hiện = Tổng − Đã thanh toán đợt 1.</li>
+    <li>Khi trả đợt 2: điền ô <b>Đã thanh toán đợt 2</b> rồi bấm <b>Lưu</b>.</li>
+    <li><b>Tình trạng</b> tự cập nhật: <i>Đã thanh toán lần 1 · Chưa thanh toán lần 2</i> khi đã trả đủ đợt 1; <i>Đã thanh toán đủ</i> khi tổng số đã trả bằng tổng lương; <i>Đã thanh toán một phần</i> nếu mới trả một phần; <i>Chưa có đơn giá</i> khi giáo viên chưa được điền đơn giá ở tab Giáo viên.</li>
+  </ol>
+  <div class="callout info"><div class="ic">i</div><p>Số đã thanh toán được lưu riêng theo từng tháng — mở lại tháng nào sẽ thấy đúng số đã nhập của tháng đó.</p></div>
+</section>
 <section class="sec" id="bao-luu" data-g="month" data-t="Bảo lưu">
   <div class="crumb" style="color:var(--violet)">Web App · Cuối tháng</div>
   <h1>Danh sách bảo lưu</h1>
