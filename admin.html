@@ -506,7 +506,7 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
 <section class="sec" id="thi-ielts" data-g="input" data-t="Thi IELTS">
   <div class="crumb" style="color:var(--green)">Web App · Nhập liệu</div>
   <h1>Xếp lịch thi IELTS</h1>
-  <p class="lead">Tab <b>Thi IELTS</b> dùng để xếp lịch Placement Test / Mock Test IELTS cho cả học viên của trung tâm và người ngoài trung tâm. Buổi thi hiện ở Lịch tuần (Loại buổi <code>TE</code>, cột Level hiện loại đăng kí), Lưới theo ngày (tên HV kèm <code>(TE)</code>) và Kiểm tra tuần; GV coi thi được tính slot theo số HV thi.</p>
+  <p class="lead">Tab <b>Thi IELTS</b> dùng để xếp lịch Placement Test / Mock Test IELTS cho cả học viên của trung tâm và người ngoài trung tâm. Chỉ <b>Admin</b> đăng kí / hủy thi; <b>CTV</b> và <b>giáo viên</b> chỉ xem danh sách thi (phía giáo viên tab này hiển thị bằng tiếng Anh, có ô lọc theo tên học viên và ô chọn giáo viên coi thi). Buổi thi hiện ở Lịch tuần (Loại buổi <code>TE</code>, cột Level hiện loại đăng kí), Lưới theo ngày (tên HV kèm <code>(TE)</code>) và Kiểm tra tuần; GV coi thi được tính slot theo số HV thi.</p>
   <ol class="steps">
     <li><b>HV của trung tâm</b>: ở khung “Học viên của trung tâm đăng kí thi”, tra cứu tên/mã → bấm <b>Đăng kí thi</b> ở dòng khóa → form phía trên tự điền tên HV. Đăng kí thi không ảnh hưởng số buổi của khóa, không hiện trong Lịch chi tiết HV của học viên.</li>
     <li><b>Người ngoài trung tâm</b>: điền thẳng <b>Học viên + Năm sinh</b> ở form Đăng kí thi. Khi lưu, hệ thống tự sinh mã <code>HVT####</code> và lưu thông tin lại; lần thi sau chỉ cần chọn ở ô “HV ngoài đã lưu” hoặc bấm <b>Đăng kí thi tiếp</b> trong danh sách HV ngoài — hệ thống tự đếm lần thi (lần 2, lần 3…).</li>
@@ -527,7 +527,7 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <li><b>Tên GV</b>: gõ tên mới. Nếu gõ trùng tên GV đã có, nút Lưu đổi thành “Thêm giờ rảnh cho …” và chỉ thêm giờ rảnh.</li>
     <li><b>Nhóm</b> PH / VN và <b>Màu</b> của GV (màu hiện ở mọi bảng lịch).</li>
     <li><b>Giờ làm</b> (ghi chú) và <b>đơn giá</b> ESL / PRE-IELTS / IELTS / Trial / <b>thi IELTS</b> (tính trên mỗi HV thi). Có thể để trống, điền sau ở tab GIAO_VIEN.</li>
-    <li><b>Giờ rảnh</b>: mỗi dòng = 1 thứ + giờ <b>từ</b> → <b>đến</b>. Bấm ✕ để bỏ dòng thừa.</li>
+    <li><b>Giờ rảnh</b>: mỗi dòng = 1 thứ + giờ <b>từ</b> → <b>đến</b> (có cả <b>Chủ nhật</b> nếu GV làm việc ngày này). Bấm ✕ để bỏ dòng thừa.</li>
     <li><b>+ thêm dòng</b> cho mỗi thứ / khung giờ khác. GV rảnh T2–T7 thì nhập 6 dòng.</li>
     <li>Bấm <b>Lưu giáo viên</b>. Web App báo “Đã thêm GV … · thêm N khung giờ rảnh”.</li>
     <li><b>Danh sách giáo viên</b>: giờ rảnh của từng GV. GV chưa khai giờ rảnh hiện chữ <span style="color:var(--red);font-weight:700">chưa có</span>.</li>
@@ -629,7 +629,7 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <tr><td><code>T1</code> / <code>T2</code></td><td>Test 1 / Test 2 -Final</td><td><code>BL</code></td><td>Bảo lưu</td></tr>
     <tr><td><code>KP</code> / <code>MP</code> / <code>?</code></td><td>HV nghỉ không mất phí / mất phí / chưa rõ</td><td><code>TR</code></td><td>Học thử</td></tr>
     <tr><td><code>HB</code></td><td>Học bù</td><td><code>KT</code></td><td>Kết thúc sớm</td></tr>
-    <tr><td><code>nTE</code> (vd <code>4TE</code>)</td><td>GV coi thi IELTS cho n HV hôm đó — nằm ở dòng riêng “CHO HV THI IELTS” dưới các khóa của GV</td><td></td><td></td></tr>
+    <tr><td><code>nTE</code> (vd <code>4TE</code>)</td><td>GV coi thi IELTS cho n HV hôm đó — nằm ở dòng riêng “CHO HV THI IELTS” ngay dưới các khóa của từng GV (dòng này luôn có cho mọi GV; chưa có buổi thi thì để trống)</td><td></td><td></td></tr>
   </table></div>
   <div class="callout info"><div class="ic">i</div><p>Lưu hoặc gửi bảng: bôi đen → Ctrl+C → dán vào Google Sheet / Excel. Hoặc trên Sheet chọn menu <b>Bright Vista → Xuất chấm công tháng → tab CHAM_CONG</b>.</p></div>
 </section>
