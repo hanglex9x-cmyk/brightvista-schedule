@@ -497,8 +497,25 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <li><b>Lưu học thử</b>: Web App báo “Đã lưu TR…”.</li>
     <li><b>Kết quả</b> sau buổi học: Chờ → Đăng ký / Không đăng ký / Hủy. Chọn xong là tự lưu.</li>
     <li><b>→ Tạo khóa</b> khi HV đăng ký: Web App chuyển sang Tạo khóa, điền sẵn tên, lớp, Sale và lịch theo giờ học thử. Bổ sung Tổng số buổi, Ngày bắt đầu rồi Lưu. Dòng học thử tự ghi Mã khóa và nút này biến mất.</li>
+    <li><b>Đổi lịch học thử</b>: ngay trên Danh sách học thử có 3 cột <b>Đổi ngày học thử / Đổi giờ học thử / Đổi GV dạy thử</b> — điền giá trị mới rồi bấm <b>Lưu</b> ở dòng đó, không cần tạo mã học thử mới. Buổi học thử tự chạy theo lịch mới ở Lịch tuần, Lưới theo ngày và Slot của GV. Để trống ô nào thì giữ nguyên lịch gốc ô đó.</li>
+    <li><b>Trùng buổi chính thức</b>: nếu HV đã có khóa chính thức và ngày học thử (sau khi đổi) trùng một buổi học chính thức của chính HV đó, buổi chính thức hôm đó <b>tự lùi sang buổi học kế tiếp</b> (tổng số buổi của khóa không đổi, ngày kết thúc khóa lùi tương ứng).</li>
   </ol>
   <div class="callout tip"><div class="ic">✓</div><p>HV học thử <b>nhiều buổi theo lịch cố định</b>: tạo khóa bình thường với <b>Loại đăng ký = Học thử</b>; mọi buổi của khóa đó tính là Trial.</p></div>
+</section>
+
+<section class="sec" id="thi-ielts" data-g="input" data-t="Thi IELTS">
+  <div class="crumb" style="color:var(--green)">Web App · Nhập liệu</div>
+  <h1>Xếp lịch thi IELTS</h1>
+  <p class="lead">Tab <b>Thi IELTS</b> dùng để xếp lịch Placement Test / Mock Test IELTS cho cả học viên của trung tâm và người ngoài trung tâm. Buổi thi hiện ở Lịch tuần (Loại buổi <code>TE</code>, cột Level hiện loại đăng kí), Lưới theo ngày (tên HV kèm <code>(TE)</code>) và Kiểm tra tuần; GV coi thi được tính slot theo số HV thi.</p>
+  <ol class="steps">
+    <li><b>HV của trung tâm</b>: ở khung “Học viên của trung tâm đăng kí thi”, tra cứu tên/mã → bấm <b>Đăng kí thi</b> ở dòng khóa → form phía trên tự điền tên HV. Đăng kí thi không ảnh hưởng số buổi của khóa, không hiện trong Lịch chi tiết HV của học viên.</li>
+    <li><b>Người ngoài trung tâm</b>: điền thẳng <b>Học viên + Năm sinh</b> ở form Đăng kí thi. Khi lưu, hệ thống tự sinh mã <code>HVT####</code> và lưu thông tin lại; lần thi sau chỉ cần chọn ở ô “HV ngoài đã lưu” hoặc bấm <b>Đăng kí thi tiếp</b> trong danh sách HV ngoài — hệ thống tự đếm lần thi (lần 2, lần 3…).</li>
+    <li>Điền <b>Loại đăng kí</b> (Placement Test IELTS / Mock Test IELTS), <b>Thời lượng</b> (phút), <b>Ngày thi</b>, <b>Giờ thi</b>, <b>Giáo viên</b> coi thi.</li>
+    <li>Bấm <b>Kiểm tra trùng giờ GV</b>: hệ thống báo nếu GV trùng buổi học / buổi học thử / buổi thi khác, hoặc ngoài giờ rảnh đã khai.</li>
+    <li>Bấm <b>Lưu đăng kí thi</b>: mỗi đăng kí được cấp mã <code>TE####</code>.</li>
+    <li><b>Danh sách đăng kí thi IELTS</b>: lọc theo Tên / Tháng thi / Năm thi. Đổi ý thì bấm <b>Hủy thi</b> ở dòng đăng kí — buổi thi biến mất khỏi mọi lịch và không tính slot nữa.</li>
+    <li><b>Tính công GV</b>: Chấm công có thêm dòng <b>CHO HV THI IELTS</b> ngay dưới các khóa của từng GV — ngày nào GV coi thi thì hiện <code>nTE</code> (n = số HV thi hôm đó, ví dụ <code>4TE</code>). Slot &amp; lương có cột <b>Cho HV thi IELTS</b> tính theo đầu HV thi, tách kỳ 1 / kỳ 2 như các cột khác; đơn giá thi IELTS điền ở tab Giáo viên (cạnh đơn giá Trial).</li>
+  </ol>
 </section>
 
 <section class="sec" id="giao-vien" data-g="input" data-t="Giáo viên mới">
@@ -509,7 +526,7 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
   <ol class="steps">
     <li><b>Tên GV</b>: gõ tên mới. Nếu gõ trùng tên GV đã có, nút Lưu đổi thành “Thêm giờ rảnh cho …” và chỉ thêm giờ rảnh.</li>
     <li><b>Nhóm</b> PH / VN và <b>Màu</b> của GV (màu hiện ở mọi bảng lịch).</li>
-    <li><b>Giờ làm</b> (ghi chú) và <b>đơn giá</b> ESL / PRE-IELTS / IELTS / Trial. Có thể để trống, điền sau ở tab GIAO_VIEN.</li>
+    <li><b>Giờ làm</b> (ghi chú) và <b>đơn giá</b> ESL / PRE-IELTS / IELTS / Trial / <b>thi IELTS</b> (tính trên mỗi HV thi). Có thể để trống, điền sau ở tab GIAO_VIEN.</li>
     <li><b>Giờ rảnh</b>: mỗi dòng = 1 thứ + giờ <b>từ</b> → <b>đến</b>. Bấm ✕ để bỏ dòng thừa.</li>
     <li><b>+ thêm dòng</b> cho mỗi thứ / khung giờ khác. GV rảnh T2–T7 thì nhập 6 dòng.</li>
     <li>Bấm <b>Lưu giáo viên</b>. Web App báo “Đã thêm GV … · thêm N khung giờ rảnh”.</li>
@@ -612,6 +629,7 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <tr><td><code>T1</code> / <code>T2</code></td><td>Test 1 / Test 2 -Final</td><td><code>BL</code></td><td>Bảo lưu</td></tr>
     <tr><td><code>KP</code> / <code>MP</code> / <code>?</code></td><td>HV nghỉ không mất phí / mất phí / chưa rõ</td><td><code>TR</code></td><td>Học thử</td></tr>
     <tr><td><code>HB</code></td><td>Học bù</td><td><code>KT</code></td><td>Kết thúc sớm</td></tr>
+    <tr><td><code>nTE</code> (vd <code>4TE</code>)</td><td>GV coi thi IELTS cho n HV hôm đó — nằm ở dòng riêng “CHO HV THI IELTS” dưới các khóa của GV</td><td></td><td></td></tr>
   </table></div>
   <div class="callout info"><div class="ic">i</div><p>Lưu hoặc gửi bảng: bôi đen → Ctrl+C → dán vào Google Sheet / Excel. Hoặc trên Sheet chọn menu <b>Bright Vista → Xuất chấm công tháng → tab CHAM_CONG</b>.</p></div>
 </section>
@@ -623,8 +641,8 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
   <figure class="shot" data-img="slot" data-f="F2" data-pins="1:100,117;2:1000,184;3:1150,184;4:1380,184"></figure>
   <ol class="steps">
     <li><b>Tháng</b>: chọn tháng tính lương.</li>
-    <li><b>Tổng slot</b> = slot 30' + Trial + 2 × slot 60'.</li>
-    <li><b>Kỳ 1</b> = ngày 1–15, <b>Kỳ 2</b> = ngày 16 đến cuối tháng. Từ 02/11/2026, mỗi ô kỳ hiện thêm dòng tách <b>ESL · PRE-IELTS · IELTS · Trial</b>; cột <b>Peso</b> là tổng tiền lương của cả 2 kỳ, cột <b>VND</b> là tiền quy đổi theo tỷ giá.</li>
+    <li><b>Tổng slot</b> = slot 30' + Trial + số HV thi IELTS (TE) + 2 × slot 60'.</li>
+    <li><b>Kỳ 1</b> = ngày 1–15, <b>Kỳ 2</b> = ngày 16 đến cuối tháng. Từ 02/11/2026, mỗi ô kỳ hiện thêm dòng tách <b>ESL · PRE-IELTS · IELTS · Trial · TE</b>; cột <b>Peso</b> là tổng tiền lương của cả 2 kỳ, cột <b>VND</b> là tiền quy đổi theo tỷ giá.</li>
     <li><b>Peso / VND</b>: chỉ có số khi đã điền đơn giá ở tab GIAO_VIEN và tỷ giá ở tab CAI_DAT.</li>
   </ol>
   <div class="tbl"><table>
@@ -632,11 +650,12 @@ th{background:var(--navy-soft);color:var(--navy);font-weight:700;font-size:13px}
     <tr><td>25 / 28 / 30 phút</td><td>1 slot 30'</td></tr>
     <tr><td>50 / 55 / 56 phút</td><td>1 slot 60' (= 2 slot)</td></tr>
     <tr><td>Học thử</td><td>1 slot Trial</td></tr>
+    <tr><td>Coi thi IELTS</td><td>1 slot TE cho mỗi HV thi (đơn giá riêng ở tab GIAO_VIEN)</td></tr>
     <tr><td>HV nghỉ MP</td><td><span class="chip y">Vẫn tính</span></td></tr>
     <tr><td>HV nghỉ KP, GV nghỉ, chưa rõ phí, bảo lưu</td><td><span class="chip n">Không tính</span></td></tr>
   </table></div>
   <div class="callout warn"><div class="ic">!</div><p>Đơn giá GV và tỷ giá peso→VND <b>hiện còn trống</b>. Điền xong thì cột Peso / VND tự có số.</p></div>
-  <p>Kéo xuống có bảng <b>Slot theo ngày</b>: rê chuột vào ô để xem chi tiết 30' / 60' / Trial. Xuất ra Sheet: menu <b>Bright Vista → Xuất slot GV tháng → tab SLOT_GV</b>.</p>
+  <p>Kéo xuống có bảng <b>Slot theo ngày</b>: rê chuột vào ô để xem chi tiết 30' / 60' / Trial / TE. Xuất ra Sheet: menu <b>Bright Vista → Xuất slot GV tháng → tab SLOT_GV</b>.</p>
 </section>
 
 <section class="sec" id="thanh-toan" data-g="month" data-t="Thanh toán lương">
